@@ -300,6 +300,8 @@ namespace TimSort
 					case 1:
 						a[left + 1] = a[left];
 						break;
+					case 0:
+						break;
 					default:
 						CopyRange(a, left, a, left + 1, n);
 						break;
@@ -354,7 +356,9 @@ namespace TimSort
 		/// <param name="length">Number of elements to be copied.</param>
 		private static void CopyRange(IList<T> src, int srcIndex, IList<T> dst, int dstIndex, int length)
 		{
-			if (dst == src && dstIndex - srcIndex > 0) // copy forward to the same array => use reverse order
+			if (length <= 0) return;
+
+			if (dstIndex - srcIndex > 0) // copy forward => use reverse order
 			{
 				srcIndex += length - 1;
 				dstIndex += length - 1;
@@ -364,6 +368,28 @@ namespace TimSort
 			{
 				while (length-- > 0) dst[dstIndex++] = src[srcIndex++];
 			}
+		}
+
+		/// <summary>Copies the range from one array to another.</summary>
+		/// <param name="src">The source array.</param>
+		/// <param name="srcIndex">Starting index in source array.</param>
+		/// <param name="dst">The destination array.</param>
+		/// <param name="dstIndex">Starting index in destination array.</param>
+		/// <param name="length">Number of elements to be copied.</param>
+		private static void CopyRange(T[] src, int srcIndex, IList<T> dst, int dstIndex, int length)
+		{
+			while (length-- > 0) dst[dstIndex++] = src[srcIndex++];
+		}
+
+		/// <summary>Copies the range from one array to another.</summary>
+		/// <param name="src">The source array.</param>
+		/// <param name="srcIndex">Starting index in source array.</param>
+		/// <param name="dst">The destination array.</param>
+		/// <param name="dstIndex">Starting index in destination array.</param>
+		/// <param name="length">Number of elements to be copied.</param>
+		private static void CopyRange(IList<T> src, int srcIndex, T[] dst, int dstIndex, int length)
+		{
+			while (length-- > 0) dst[dstIndex++] = src[srcIndex++];
 		}
 
 		/// <summary>Reverse the specified range of the specified array.</summary>

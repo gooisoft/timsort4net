@@ -299,6 +299,8 @@ namespace TimSort
 					case 1:
 						a[left + 1] = a[left];
 						break;
+					case 0:
+						break;
 					default:
 						CopyRange(a, left, a, left + 1, n);
 						break;
