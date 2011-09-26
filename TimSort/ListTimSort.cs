@@ -199,7 +199,7 @@ namespace TimSort
 			if (width < MIN_MERGE)
 			{
 				int initRunLength = CountRunAndMakeAscending(a, lo, hi, c);
-				binarySort(a, lo, hi, lo + initRunLength, c);
+				BinarySort(a, lo, hi, lo + initRunLength, c);
 				return;
 			}
 
@@ -217,7 +217,7 @@ namespace TimSort
 				if (runLen < minRun)
 				{
 					int force = width <= minRun ? width : minRun;
-					binarySort(a, lo, lo + force, lo + runLen, c);
+					BinarySort(a, lo, lo + force, lo + runLen, c);
 					runLen = force;
 				}
 
@@ -248,7 +248,7 @@ namespace TimSort
 		/// <param name="start">start the index of the first element in the range that is not already known to be sorted 
 		/// (<c><![CDATA[lo <= start <= hi]]></c>)</param>
 		/// <param name="c">The comparator to used for the sort.</param>
-		private static void binarySort(IList<T> a, int lo, int hi, int start, Comparison<T> c)
+		private static void BinarySort(IList<T> a, int lo, int hi, int start, Comparison<T> c)
 		{
 			Debug.Assert(lo <= start && start <= hi);
 

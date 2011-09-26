@@ -134,7 +134,33 @@ namespace System.Linq
 			length = Math.Min(length, array.Length - start);
 			ArrayTimSort<T>.Sort(array, start, start + length, comparer.Compare);
 		}
-		
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <typeparam name="C">Type of compared expression.</typeparam>
+		/// <param name="array">The array.</param>
+		/// <param name="expression">The compared expression.</param>
+		public static void TimSort<T, C>(this T[] array, Func<T, C> expression)
+		{
+			Comparison<T> comparer = (a, b) => Comparer<C>.Default.Compare(expression(a), expression(b));
+			ArrayTimSort<T>.Sort(array, comparer);
+		}
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <typeparam name="C">Type of compared expression.</typeparam>
+		/// <param name="array">The array.</param>
+		/// <param name="start">The start index.</param>
+		/// <param name="length">The length.</param>
+		/// <param name="expression">The compared expression.</param>
+		public static void TimSort<T, C>(this T[] array, int start, int length, Func<T, C> expression)
+		{
+			length = Math.Min(length, array.Length - start);
+			Comparison<T> comparer = (a, b) => Comparer<C>.Default.Compare(expression(a), expression(b));
+			ArrayTimSort<T>.Sort(array, start, start + length, comparer);
+		}
+
+
 		#endregion
 
 		#region List (IList<T>)
@@ -146,7 +172,7 @@ namespace System.Linq
 		{
 			if (buffered)
 			{
-				MergeBackSort(array, 0, array.Count, Comparer<T>.Default.Compare);
+				BufferedListSort(array, 0, array.Count, Comparer<T>.Default.Compare);
 			}
 			else
 			{
@@ -165,7 +191,7 @@ namespace System.Linq
 			
 			if (buffered)
 			{
-				MergeBackSort(array, start, length, Comparer<T>.Default.Compare);
+				BufferedListSort(array, start, length, Comparer<T>.Default.Compare);
 			}
 			else
 			{
@@ -181,7 +207,7 @@ namespace System.Linq
 		{
 			if (buffered)
 			{
-				MergeBackSort(array, 0, array.Count, comparer);
+				BufferedListSort(array, 0, array.Count, comparer);
 			}
 			else
 			{
@@ -201,7 +227,7 @@ namespace System.Linq
 
 			if (buffered)
 			{
-				MergeBackSort(array, start, length, comparer);
+				BufferedListSort(array, start, length, comparer);
 			}
 			else
 			{
@@ -217,7 +243,7 @@ namespace System.Linq
 		{
 			if (buffered)
 			{
-				MergeBackSort(array, 0, array.Count, comparer.Compare);
+				BufferedListSort(array, 0, array.Count, comparer.Compare);
 			}
 			else
 			{
@@ -237,19 +263,68 @@ namespace System.Linq
 
 			if (buffered)
 			{
-				MergeBackSort(array, start, length, comparer.Compare);
+				BufferedListSort(array, start, length, comparer.Compare);
 			}
 			else
 			{
 				ListTimSort<T>.Sort(array, start, start + length, comparer.Compare);
 			}
 		}
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <typeparam name="C">Type of compared expression</typeparam>
+		/// <param name="array">The array.</param>
+		/// <param name="expression">The compared expression.</param>
+		/// <param name="buffered">Set it to <c>true</c> if you need buffered sorting.</param>
+		public static void TimSort<T, C>(this IList<T> array, Func<T, C> expression, bool buffered = true)
+		{
+			Comparison<T> comparer = (a, b) => Comparer<C>.Default.Compare(expression(a), expression(b));
+
+			if (buffered)
+			{
+				BufferedListSort(array, 0, array.Count, comparer);
+			}
+			else
+			{
+				ListTimSort<T>.Sort(array, comparer);
+			}
+		}
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <typeparam name="C">Type of compared expression.</typeparam>
+		/// <param name="array">The array.</param>
+		/// <param name="start">The start index.</param>
+		/// <param name="length">The length.</param>
+		/// <param name="expression">The compared expression.</param>
+		/// <param name="buffered">Set it to <c>true</c> if you need buffered sorting.</param>
+		public static void TimSort<T, C>(this IList<T> array, int start, int length, Func<T, C> expression, bool buffered = true)
+		{
+			length = Math.Min(length, array.Count - start);
+			Comparison<T> comparer = (a, b) => Comparer<C>.Default.Compare(expression(a), expression(b));
+
+			if (buffered)
+			{
+				BufferedListSort(array, start, length, comparer);
+			}
+			else
+			{
+				ListTimSort<T>.Sort(array, start, start + length, comparer);
+			}
+		}
 		
 		#endregion
-		
-		#region MergeBackSort
-		
-		private static void MergeBackSort<T>(IList<T> list, int start, int length, Comparison<T> comparer)
+
+		#region BufferedListSort
+
+		/// <summary>Buffered list sort.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <param name="list">The list.</param>
+		/// <param name="start">The start.</param>
+		/// <param name="length">The length.</param>
+		/// <param name="comparer">The comparer.</param>
+		private static void BufferedListSort<T>(IList<T> list, int start, int length, Comparison<T> comparer)
 		{
 			Debug.Assert(start >= 0 && start < list.Count);
 			Debug.Assert(length >= 0 && length <= list.Count - start);
