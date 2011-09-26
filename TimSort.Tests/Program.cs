@@ -9,6 +9,17 @@ namespace TimSort.Tests
 	{
 		static void Main(string[] args)
 		{
+			PerformanceTests tests = new PerformanceTests();
+
+			tests.RandomTests();
+			tests.SortedTests();
+			tests.ReversedTests();
+
+			tests.RandomTests_List();
+			tests.SortedTests_List();
+			tests.ReversedTests_List();
+
+			tests.RandomTests_ListWithMergeBack();
 		}
 	}
 }

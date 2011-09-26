@@ -31,7 +31,7 @@ namespace TimSort.Tests
 
 		public static int Compare(int a, int b)
 		{
-			// Thread.Sleep(0);
+			// Thread.Sleep(0); // make compare function slow
 			return a.CompareTo(b);
 		}
 
