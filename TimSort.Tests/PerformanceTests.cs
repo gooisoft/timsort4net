@@ -1,20 +1,4 @@
-﻿#region Header
-// --------------------------------------------------------------------------------------
-// TimSortTests.TimSortTests.cs
-// --------------------------------------------------------------------------------------
-// 
-// 
-//
-// Copyright (c) 2011 Sepura Plc 
-//
-// Sepura Confidential
-//
-// Created: 9/22/2011 9:18:00 AM : SEPURA/krajewskim on SEPURA1051 
-// 
-// --------------------------------------------------------------------------------------
-#endregion
-
-using System;
+﻿using System;
 using NUnit.Framework;
 using System.Threading;
 using System.Linq;
