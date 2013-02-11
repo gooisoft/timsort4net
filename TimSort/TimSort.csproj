@@ -40,13 +40,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArrayTimSort.cs" />
-    <Compile Include="ListTimSort.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimSort.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TimSort.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TimSortBase.cs" />
     <Compile Include="TimSortExtender.cs" />
+    <Compile Include="TimSortExtender2.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TimSort.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TimSort.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
