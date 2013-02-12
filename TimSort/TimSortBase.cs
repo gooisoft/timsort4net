@@ -325,6 +325,27 @@ namespace System.Linq
 			Array.Reverse(array, lo, hi - lo);
 		}
 
+        /// <summary>Copies specified array range.</summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="sourceIndex">Index of the source.</param>
+        /// <param name="targetIndex">Index of the target.</param>
+        /// <param name="length">The length.</param>
+        protected static void ArrayCopyRange(TItem[] buffer, int sourceIndex, int targetIndex, int length)
+        {
+            Array.Copy(buffer, sourceIndex, buffer, targetIndex, length);
+        }
+
+        /// <summary>Copies specified array range.</summary>
+        /// <param name="source">The source.</param>
+        /// <param name="sourceIndex">Index of the source.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="targetIndex">Index of the target.</param>
+        /// <param name="length">The length.</param>
+        protected static void ArrayCopyRange(TItem[] source, int sourceIndex, TItem[] target, int targetIndex, int length)
+        {
+            Array.Copy(source, sourceIndex, target, targetIndex, length);
+        }
+
 		#endregion
 	}
 

@@ -67,7 +67,6 @@
 //------------------------------------------------------------------------------
 #endregion
 
-// !!! using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -89,10 +88,12 @@ namespace System.Linq
         var array_sorter = native_type + "Array";
         list.Add(new VectorDefinition { 
             Name = array_sorter, ItemType = native_type, CompareMethod = CompareMethod.Native });
+		/*
         list.Add(new VectorDefinition { 
             Name = native_type + "List", VectorType = "List<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });
         list.Add(new VectorDefinition { 
             Name = native_type + "IList", VectorType = "IList<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });
+		*/
     }
 
     list.Add(new VectorDefinition { 
@@ -115,9 +116,12 @@ namespace System.Linq
         var isComparable = (item.CompareMethod == CompareMethod.Comparable);
         var isTemplate = item.IsTemplate;
         var isArray = item.IsArray;
+		var isNative = item.ItemType != null;
 		
 		var itemType = item.ItemType ?? "T";
         var arrayType = item.VectorType ?? itemType + "[]";
+
+		var isArrayOfNative = isArray && isNative;
 		
 		var className = string.Format("{0}TimSort", item.Name);
         var arraySorterName = item.ArraySorter == null ? "" : string.Format("{0}TimSort{1}.", item.ArraySorter, isTemplate ? "<T>" : "");
@@ -131,7 +135,7 @@ namespace System.Linq
 		
 		var classRestrictions = isComparable && isTemplate ? " where T: IComparable<T>" : string.Empty;
 		var lengthProperty = isArray ? "Length" : "Count";
-        var copyRangeFunc = isArray ? "Array.Copy" : "IndexedCopyRange";
+        var copyRangeFunc = isArray ? "ArrayCopyRange" : "IndexedCopyRange";
         var reverseRangeFunc = isArray ? "ArrayReverseRange" : "IndexedReverseRange";
 		
 		Func<string, string, string, string> cmp;
@@ -200,13 +204,13 @@ namespace System.Linq
 		{
 			CheckRange(array.<#= lengthProperty #>, lo, hi);
 
-			int width = hi - lo;
+			var width = hi - lo;
 			if (width < 2) return; // Arrays of size 0 and 1 are always sorted
 
 			// If array is small, do a "mini-TimSort" with no merges
 			if (width < MIN_MERGE)
 			{
-				int initRunLength = CountRunAndMakeAscending(array, lo, hi<#= comparerOpt #>);
+				var initRunLength = CountRunAndMakeAscending(array, lo, hi<#= comparerOpt #>);
 				BinarySort(array, lo, hi, lo + initRunLength<#= comparerOpt #>);
 				return;
 			}
@@ -219,12 +223,12 @@ namespace System.Linq
 			do
 			{
 				// Identify next run
-				int runLen = CountRunAndMakeAscending(array, lo, hi<#= comparerOpt #>);
+				var runLen = CountRunAndMakeAscending(array, lo, hi<#= comparerOpt #>);
 
 				// If run is short, extend to min(minRun, nRemaining)
 				if (runLen < minRun)
 				{
-					int force = width <= minRun ? width : minRun;
+					var force = width <= minRun ? width : minRun;
 					BinarySort(array, lo, lo + force, lo + runLen<#= comparerOpt #>);
 					runLen = force;
 				}
@@ -258,19 +262,34 @@ namespace System.Linq
 <# if (usesComparer) { #>
 		/// <param name="comparer">The comparator to used for the sort.</param>
 <# } #>
+<# if (isArrayOfNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		private static void BinarySort(<#= arrayArg #>, int lo, int hi, int start<#= comparerArg #>)
 		{
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * a = &array[0]) {
+			#else
+			var a = array;
+			#endif
+<# } else { #>
+			var a = array;
+<# } #>
+
 			Debug.Assert(lo <= start && start <= hi);
 
 			if (start == lo) start++;
 
 			for (/* nothing */; start < hi; start++)
 			{
-				<#= itemType #> pivot = array[start];
+				var pivot = a[start];
 
 				// Set left (and right) to the index where a[start] (pivot) belongs
-				int left = lo;
-				int right = start;
+				var left = lo;
+				var right = start;
 				Debug.Assert(left <= right);
 
 				// Invariants:
@@ -278,8 +297,8 @@ namespace System.Linq
 				// * pivot < all in [right, start).
 				while (left < right)
 				{
-					int mid = (left + right) >> 1;
-					if (<#= cmp("pivot", "array[mid]", "<") #>) // c(pivot, array[mid]) < 0
+					var mid = (left + right) >> 1;
+					if (<#= cmp("pivot", "a[mid]", "<") #>) // c(pivot, a[mid]) < 0
 					{
 						right = mid;
 					}
@@ -296,24 +315,30 @@ namespace System.Linq
 				// first slot after them -- that's why this sort is stable.
 				// Slide elements over to make room to make room for pivot.
 
-				int n = start - left; // The number of elements to move
+				var n = start - left; // The number of elements to move
 
 				// switch is just an optimization for copyRange in default case
 				switch (n)
 				{
 					case 2:
-						array[left + 2] = array[left + 1];
-						array[left + 1] = array[left];
+						a[left + 2] = a[left + 1];
+						a[left + 1] = a[left];
 						break;
 					case 1:
-						array[left + 1] = array[left];
+						a[left + 1] = a[left];
 						break;
 					default:
-						<#= copyRangeFunc #>(array, left, array, left + 1, n);
+						<#= copyRangeFunc #>(a, left, left + 1, n);
 						break;
 				}
-				array[left] = pivot;
+				a[left] = pivot;
 			}
+
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			} // fixed (<#= itemType #> * a = &array[0])
+			#endif
+<# } #>
 		}
 
 		/// <summary>
@@ -334,58 +359,97 @@ namespace System.Linq
 		/// <param name="comparer">the comparator to used for the sort.</param>
 <# } #>
 		/// <returns>the length of the run beginning at the specified position in the specified array</returns>
+<# if (isArrayOfNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		private static int CountRunAndMakeAscending(<#= arrayArg #>, int lo, int hi<#= comparerArg #>)
 		{
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * a = &array[0]) {
+			#else
+			var a = array;
+			#endif
+<# } else { #>
+			var a = array;
+<# } #>
+
 			Debug.Assert(lo < hi);
-			int runHi = lo + 1;
+			var runHi = lo + 1;
 			if (runHi == hi) return 1;
 
 			// Find end of run, and reverse range if descending
-			if (<#= cmp("array[runHi++]", "array[lo]", "<") #>) // c(a[runHi++], a[lo]) < 0
+			if (<#= cmp("a[runHi++]", "a[lo]", "<") #>) // c(a[runHi++], a[lo]) < 0
 			{
 				// Descending
-				while (runHi < hi && <#= cmp("array[runHi]", "array[runHi - 1]", "<") #>) runHi++;
-				<#= reverseRangeFunc #>(array, lo, runHi);
+				while (runHi < hi && <#= cmp("a[runHi]", "a[runHi - 1]", "<") #>) runHi++;
+				<#= reverseRangeFunc #>(a, lo, runHi);
 			}
 			else
 			{
 				// Ascending
-				while (runHi < hi && <#= cmp("array[runHi]", "array[runHi - 1]", ">=") #>) runHi++; // c(a[runHi], a[runHi - 1]) >= 0
+				while (runHi < hi && <#= cmp("a[runHi]", "a[runHi - 1]", ">=") #>) runHi++; // c(a[runHi], a[runHi - 1]) >= 0
 			}
 
 			return runHi - lo;
+
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			} // fixed (<#= itemType #> * a = &array[0])
+			#endif
+<# } #>
 		}
 
 <# if (!isArray) { #>
-		/// <summary>Copies the range from one array to another.</summary>
-		/// <param name="src">The source array.</param>
-		/// <param name="srcIndex">Starting index in source array.</param>
-		/// <param name="dst">The destination array.</param>
-		/// <param name="dstIndex">Starting index in destination array.</param>
-		/// <param name="length">Number of elements to be copied.</param>
-		private static void IndexedCopyRange(<#= arrayType #> src, int srcIndex, <#= arrayType #> dst, int dstIndex, int length)
+        /// <summary>Copies the range from one array to another.</summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="srcIndex">Source index in array.</param>
+        /// <param name="dstIndex">Target index in array.</param>
+        /// <param name="length">Number of elements to be copied.</param>
+		private static void IndexedCopyRange(<#= arrayType #> buffer, int srcIndex, int dstIndex, int length)
 		{
-			if (dst == src && dstIndex - srcIndex > 0) // copy forward to the same array => use reverse order
+			if (dstIndex > srcIndex) // copy forward to the same array => use reverse order
 			{
 				srcIndex += length - 1;
 				dstIndex += length - 1;
-				while (length-- > 0) dst[dstIndex--] = src[srcIndex--];
+				while (length-- > 0) buffer[dstIndex--] = buffer[srcIndex--];
 			}
 			else // copy to different array or backwards => use natural order
 			{
-				while (length-- > 0) dst[dstIndex++] = src[srcIndex++];
+				while (length-- > 0) buffer[dstIndex++] = buffer[srcIndex++];
 			}
 		}
-		
+
 		/// <summary>Copies the range from one array to another.</summary>
 		/// <param name="src">The source array.</param>
 		/// <param name="srcIndex">Starting index in source array.</param>
 		/// <param name="dst">The destination array.</param>
 		/// <param name="dstIndex">Starting index in destination array.</param>
 		/// <param name="length">Number of elements to be copied.</param>
+<# if (isNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		private static void IndexedCopyRange(<#= itemType #>[] src, int srcIndex, <#= arrayType #> dst, int dstIndex, int length)
 		{
-			while (length-- > 0) dst[dstIndex++] = src[srcIndex++];
+<# if (isNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * s = &src[0]) {
+			#else
+			var s = src;
+			#endif
+<# } else { #>
+			var s = src;
+<# } #>
+			while (length-- > 0) dst[dstIndex++] = s[srcIndex++];
+<# if (isNative) { #>
+			#if UNSAFE
+			} // fixed (<#= itemType #> * s = &src[0])
+			#endif
+<# } #>
 		}
 		
 		/// <summary>Copies the range from one array to another.</summary>
@@ -394,9 +458,28 @@ namespace System.Linq
 		/// <param name="dst">The destination array.</param>
 		/// <param name="dstIndex">Starting index in destination array.</param>
 		/// <param name="length">Number of elements to be copied.</param>
+<# if (isNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		private static void IndexedCopyRange(<#= arrayType #> src, int srcIndex, <#= itemType #>[] dst, int dstIndex, int length)
 		{
-			while (length-- > 0) dst[dstIndex++] = src[srcIndex++];
+<# if (isNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * d = &dst[0]) {
+			#else
+			var d = dst;
+			#endif
+<# } else { #>
+			var d = dst;
+<# } #>
+			while (length-- > 0) d[dstIndex++] = src[srcIndex++];
+<# if (isNative) { #>
+			#if UNSAFE
+			} // fixed (<#= itemType #> * d = &dst[0])
+			#endif
+<# } #>
 		}
 
 		/// <summary>Reverse the specified range of the specified array.</summary>
@@ -415,6 +498,50 @@ namespace System.Linq
 		}
 
 <# } #>
+<# if (isArrayOfNative) { #>
+#if UNSAFE
+
+	    unsafe protected static void ArrayCopyRange(<#= itemType #>* buffer, int sourceIndex, int targetIndex, int length)
+	    {
+			if (sourceIndex >= targetIndex)
+			{
+                var source = buffer + sourceIndex;
+                var target = buffer + targetIndex;
+				while (length-- > 0) *target++ = *source++;
+			}
+			else
+			{
+				var source = buffer + sourceIndex + length - 1;
+                var target = buffer + targetIndex + length - 1;
+				while (length-- > 0) *target-- = *source--;
+			}
+	    }
+
+	    unsafe protected static void ArrayCopyRange(<#= itemType #>* source, int sourceIndex, <#= itemType #>* target, int targetIndex, int length)
+	    {
+			source += sourceIndex;
+			target += targetIndex;
+			while (length-- > 0) *target++ = *source++;
+	    }
+
+		/// <summary>Reverse the specified range of the specified array.</summary>
+		/// <param name="array">the array in which a range is to be reversed.</param>
+		/// <param name="lo">the index of the first element in the range to be reversed.</param>
+		/// <param name="hi">the index after the last element in the range to be reversed.</param>
+	    unsafe protected static void ArrayReverseRange(<#= itemType #>* array, int lo, int hi)
+	    {
+			var loPtr = array + lo;
+			var hiPtr = array + hi - 1;
+			while (loPtr < hiPtr)
+			{
+				var t = *loPtr;
+				*loPtr++ = *hiPtr;
+				*hiPtr-- = t;
+			}
+	    }
+
+#endif
+<# } #>
 		/// <summary>
 		/// Merges the two runs at stack indices i and i+1.  Run i must be the penultimate or antepenultimate run on the stack. 
 		/// In other words, i must be equal to stackSize-2 or stackSize-3.
@@ -429,10 +556,10 @@ namespace System.Linq
 <# if (usesComparer) { #>
 			var comparer = _comparer;
 <# } #>
-			int base1 = _runBase[runIndex];
-			int len1 = _runLength[runIndex];
-			int base2 = _runBase[runIndex + 1];
-			int len2 = _runLength[runIndex + 1];
+			var base1 = _runBase[runIndex];
+			var len1 = _runLength[runIndex];
+			var base2 = _runBase[runIndex + 1];
+			var len2 = _runLength[runIndex + 1];
 			Debug.Assert(len1 > 0 && len2 > 0);
 			Debug.Assert(base1 + len1 == base2);
 
@@ -449,7 +576,7 @@ namespace System.Linq
 
 			// Find where the first element of run2 goes in run1. Prior elements
 			// in run1 can be ignored (because they're already in place).
-			int k = GallopRight(_array[base2], _array, base1, len1, 0<#= comparerOpt #>);
+			var k = GallopRight(_array[base2], _array, base1, len1, 0<#= comparerOpt #>);
 			Debug.Assert(k >= 0);
 			base1 += k;
 			len1 -= k;
@@ -485,17 +612,32 @@ namespace System.Linq
 		/// <returns>the int k,  0 &lt;= k &lt;= n such that a[b + k - 1] &lt; key &lt;= a[b + k], pretending that a[b - 1] 
 		/// is minus infinity and a[b + n] is infinity. In other words, key belongs at index b + k; or in other words, the 
 		/// first k elements of a should precede key, and the last n - k should follow it.</returns>
+<# if (isArrayOfNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		internal static int GallopLeft(<#= itemType #> key, <#= arrayArg #>, int lo, int length, int hint<#= comparerArg #>)
 		{
-			Debug.Assert(length > 0 && hint >= 0 && hint < length);
-			int lastOfs = 0;
-			int ofs = 1;
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * a = &array[0]) {
+			#else
+			var a = array;
+			#endif
+<# } else { #>
+			var a = array;
+<# } #>
 
-			if (<#= cmp("key", "array[lo + hint]", ">") #>) // comparer(key, array[lo + hint]) > 0
+			Debug.Assert(length > 0 && hint >= 0 && hint < length);
+			var lastOfs = 0;
+			var ofs = 1;
+
+			if (<#= cmp("key", "a[lo + hint]", ">") #>) // comparer(key, a[lo + hint]) > 0
 			{
 				// Gallop right until a[base+hint+lastOfs] < key <= a[base+hint+ofs]
-				int maxOfs = length - hint;
-				while (ofs < maxOfs && <#= cmp("key", "array[lo + hint + ofs]", ">") #>) // comparer(key, array[lo + hint + ofs]) > 0
+				var maxOfs = length - hint;
+				while (ofs < maxOfs && <#= cmp("key", "a[lo + hint + ofs]", ">") #>) // comparer(key, a[lo + hint + ofs]) > 0
 				{
 					lastOfs = ofs;
 					ofs = (ofs << 1) + 1;
@@ -512,8 +654,8 @@ namespace System.Linq
 			else // if (key <= a[base + hint])
 			{
 				// Gallop left until a[base+hint-ofs] < key <= a[base+hint-lastOfs]
-				int maxOfs = hint + 1;
-				while (ofs < maxOfs && <#= cmp("key", "array[lo + hint - ofs]", "<=") #>) // comparer(key, array[lo + hint - ofs]) <= 0
+				var maxOfs = hint + 1;
+				while (ofs < maxOfs && <#= cmp("key", "a[lo + hint - ofs]", "<=") #>) // comparer(key, a[lo + hint - ofs]) <= 0
 				{
 					lastOfs = ofs;
 					ofs = (ofs << 1) + 1;
@@ -524,7 +666,7 @@ namespace System.Linq
 					ofs = maxOfs;
 
 				// Make offsets relative to base
-				int tmp = lastOfs;
+				var tmp = lastOfs;
 				lastOfs = hint - ofs;
 				ofs = hint - tmp;
 			}
@@ -536,15 +678,21 @@ namespace System.Linq
 			lastOfs++;
 			while (lastOfs < ofs)
 			{
-				int m = lastOfs + ((ofs - lastOfs) >> 1);
+				var m = lastOfs + ((ofs - lastOfs) >> 1);
 
-				if (<#= cmp("key", "array[lo + m]", ">") #>) // comparer(key, array[lo + m]) > 0
+				if (<#= cmp("key", "a[lo + m]", ">") #>) // comparer(key, a[lo + m]) > 0
 					lastOfs = m + 1; // a[base + m] < key
 				else
 					ofs = m; // key <= a[base + m]
 			}
 			Debug.Assert(lastOfs == ofs); // so a[base + ofs - 1] < key <= a[base + ofs]
 			return ofs;
+
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			} // fixed (...)
+			#endif
+<# } #>
 		}
 
 		/// <summary>
@@ -561,17 +709,32 @@ namespace System.Linq
 		/// <param name="comparer">the comparator used to order the range, and to search.</param>
 <# } #>
 		/// <returns>int k, that 0 &lt;= k &lt;= n such that a[b + k - 1] &lt;= key &lt; a[b + k]</returns>
+<# if (isArrayOfNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		internal static int GallopRight(<#= itemType #> key, <#= arrayArg #>, int lo, int length, int hint<#= comparerArg #>)
 		{
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * a = &array[0]) {
+			#else
+			var a = array;
+			#endif
+<# } else { #>
+			var a = array;
+<# } #>
+
 			Debug.Assert(length > 0 && hint >= 0 && hint < length);
 
-			int ofs = 1;
-			int lastOfs = 0;
-			if (<#= cmp("key", "array[lo + hint]", "<") #>) // comparer(key, array[lo + hint]) < 0
+			var ofs = 1;
+			var lastOfs = 0;
+			if (<#= cmp("key", "a[lo + hint]", "<") #>) // comparer(key, a[lo + hint]) < 0
 			{
 				// Gallop left until a[b+hint - ofs] <= key < a[b+hint - lastOfs]
-				int maxOfs = hint + 1;
-				while (ofs < maxOfs && <#= cmp("key", "array[lo + hint - ofs]", "<") #>)
+				var maxOfs = hint + 1;
+				while (ofs < maxOfs && <#= cmp("key", "a[lo + hint - ofs]", "<") #>)
 				{
 					lastOfs = ofs;
 					ofs = (ofs << 1) + 1;
@@ -582,7 +745,7 @@ namespace System.Linq
 					ofs = maxOfs;
 
 				// Make offsets relative to b
-				int tmp = lastOfs;
+				var tmp = lastOfs;
 				lastOfs = hint - ofs;
 				ofs = hint - tmp;
 			}
@@ -590,8 +753,8 @@ namespace System.Linq
 			{
 				// a[b + hint] <= key
 				// Gallop right until a[b+hint + lastOfs] <= key < a[b+hint + ofs]
-				int maxOfs = length - hint;
-				while (ofs < maxOfs && <#= cmp("key", "array[lo + hint + ofs]", ">=") #>)
+				var maxOfs = length - hint;
+				while (ofs < maxOfs && <#= cmp("key", "a[lo + hint + ofs]", ">=") #>)
 				{
 					lastOfs = ofs;
 					ofs = (ofs << 1) + 1;
@@ -613,9 +776,9 @@ namespace System.Linq
 			lastOfs++;
 			while (lastOfs < ofs)
 			{
-				int m = lastOfs + ((ofs - lastOfs) >> 1);
+				var m = lastOfs + ((ofs - lastOfs) >> 1);
 
-				if (<#= cmp("key", "array[lo + m]", "<") #>)
+				if (<#= cmp("key", "a[lo + m]", "<") #>)
 					ofs = m; // key < a[b + m]
 				else
 					lastOfs = m + 1; // a[b + m] <= key
@@ -623,6 +786,12 @@ namespace System.Linq
 
 			Debug.Assert(lastOfs == ofs); // so a[b + ofs - 1] <= key < a[b + ofs]
 			return ofs;
+
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			} // fixed (...)
+			#endif
+<# } #>
 		}
 
 		/// <summary>
@@ -636,53 +805,70 @@ namespace System.Linq
 		/// <param name="len1">length of first run to be merged (must be &gt; 0).</param>
 		/// <param name="base2">index of first element in second run to be merged (must be aBase + aLen).</param>
 		/// <param name="len2">length of second run to be merged (must be &gt; 0).</param>
+<# if (isArrayOfNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		private void MergeLo(int base1, int len1, int base2, int len2)
 		{
 			Debug.Assert(len1 > 0 && len2 > 0 && base1 + len1 == base2);
 
 			// Copy first run into temp array
-			var array = _array; // For performance
+			var array = _array;
 			var mergeBuffer = EnsureCapacity(len1);
-			<#= copyRangeFunc #>(array, base1, mergeBuffer, 0, len1);
 
-			int cursor1 = 0;       // Indexes into tmp array
-			int cursor2 = base2;   // Indexes int a
-			int dest = base1;      // Indexes int a
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * m = &mergeBuffer[0])
+			fixed (<#= itemType #> * a = &array[0]) {
+			#else
+			var m = mergeBuffer;
+			var a = array;
+			#endif
+<# } else { #>
+			var m = mergeBuffer;
+			var a = array;
+<# } #>
+
+			<#= copyRangeFunc #>(a, base1, m, 0, len1);
+
+			var cursor1 = 0;       // Indexes into tmp array
+			var cursor2 = base2;   // Indexes int a
+			var dest = base1;      // Indexes int a
 
 			// Move first element of second run and deal with degenerate cases
-			array[dest++] = array[cursor2++];
+			a[dest++] = a[cursor2++];
 			if (--len2 == 0)
 			{
-				<#= copyRangeFunc #>(mergeBuffer, cursor1, array, dest, len1);
+				<#= copyRangeFunc #>(m, cursor1, a, dest, len1);
 				return;
 			}
 			if (len1 == 1)
 			{
-				<#= copyRangeFunc #>(array, cursor2, array, dest, len2);
-				array[dest + len2] = mergeBuffer[cursor1]; // Last elt of run 1 to end of merge
+				<#= copyRangeFunc #>(a, cursor2, dest, len2);
+				a[dest + len2] = m[cursor1]; // Last elt of run 1 to end of merge
 				return;
 			}
 
 <# if (usesComparer) { #>
 			var comparer = _comparer;  // Use local variables for performance
 <# } #>
-			int minGallop = _minGallop;
+			var minGallop = _minGallop;
 
 			while (true)
 			{
-				int count1 = 0; // Number of times in a row that first run won
-				int count2 = 0; // Number of times in a row that second run won
+				var count1 = 0; // Number of times in a row that first run won
+				var count2 = 0; // Number of times in a row that second run won
 
-				/*
-				 * Do the straightforward thing until (if ever) one run starts
-				 * winning consistently.
-				 */
+				// Do the straightforward thing until (if ever) one run starts
+				// winning consistently.
 				do
 				{
 					Debug.Assert(len1 > 1 && len2 > 0);
-					if (<#= cmp("array[cursor2]", "mergeBuffer[cursor1]", "<") #>) // c(array[cursor2], mergeBuffer[cursor1]) < 0
+					if (<#= cmp("a[cursor2]", "m[cursor1]", "<") #>) // c(a[cursor2], m[cursor1]) < 0
 					{
-						array[dest++] = array[cursor2++];
+						a[dest++] = a[cursor2++];
 						count2++;
 						count1 = 0;
 						if (--len2 == 0)
@@ -690,7 +876,7 @@ namespace System.Linq
 					}
 					else
 					{
-						array[dest++] = mergeBuffer[cursor1++];
+						a[dest++] = m[cursor1++];
 						count1++;
 						count2 = 0;
 						if (--len1 == 1)
@@ -704,31 +890,31 @@ namespace System.Linq
 				do
 				{
 					Debug.Assert(len1 > 1 && len2 > 0);
-					count1 = <#= arraySorterName #>GallopRight(array[cursor2], mergeBuffer, cursor1, len1, 0<#= comparerOpt #>);
+					count1 = <#= arraySorterName #>GallopRight(a[cursor2], mergeBuffer, cursor1, len1, 0<#= comparerOpt #>);
 					if (count1 != 0)
 					{
-						<#= copyRangeFunc #>(mergeBuffer, cursor1, array, dest, count1);
+						<#= copyRangeFunc #>(m, cursor1, a, dest, count1);
 						dest += count1;
 						cursor1 += count1;
 						len1 -= count1;
 						if (len1 <= 1) // len1 == 1 || len1 == 0
 							goto break_outer;
 					}
-					array[dest++] = array[cursor2++];
+					a[dest++] = a[cursor2++];
 					if (--len2 == 0)
 						goto break_outer;
 
-					count2 = GallopLeft(mergeBuffer[cursor1], array, cursor2, len2, 0<#= comparerOpt #>);
+					count2 = GallopLeft(m[cursor1], array, cursor2, len2, 0<#= comparerOpt #>);
 					if (count2 != 0)
 					{
-						<#= copyRangeFunc #>(array, cursor2, array, dest, count2);
+						<#= copyRangeFunc #>(a, cursor2, dest, count2);
 						dest += count2;
 						cursor2 += count2;
 						len2 -= count2;
 						if (len2 == 0)
 							goto break_outer;
 					}
-					array[dest++] = mergeBuffer[cursor1++];
+					a[dest++] = m[cursor1++];
 					if (--len1 == 1)
 						goto break_outer;
 					minGallop--;
@@ -746,8 +932,8 @@ namespace System.Linq
 			if (len1 == 1)
 			{
 				Debug.Assert(len2 > 0);
-				<#= copyRangeFunc #>(array, cursor2, array, dest, len2);
-				array[dest + len2] = mergeBuffer[cursor1]; //  Last elt of run 1 to end of merge
+				<#= copyRangeFunc #>(a, cursor2, dest, len2);
+				a[dest + len2] = m[cursor1]; //  Last elt of run 1 to end of merge
 			}
 			else if (len1 == 0)
 			{
@@ -757,8 +943,14 @@ namespace System.Linq
 			{
 				Debug.Assert(len2 == 0);
 				Debug.Assert(len1 > 1);
-				<#= copyRangeFunc #>(mergeBuffer, cursor1, array, dest, len1);
+				<#= copyRangeFunc #>(m, cursor1, a, dest, len1);
 			}
+
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			} // fixed (...)
+			#endif
+<# } #>
 		}
 
 		/// <summary>
@@ -769,52 +961,71 @@ namespace System.Linq
 		/// <param name="len1">length of first run to be merged (must be &gt; 0).</param>
 		/// <param name="base2">index of first element in second run to be merged (must be aBase + aLen).</param>
 		/// <param name="len2">length of second run to be merged (must be &gt; 0).</param>
+<# if (isArrayOfNative) { #>
+		#if UNSAFE
+		unsafe
+		#endif
+<# } #>
 		private void MergeHi(int base1, int len1, int base2, int len2)
 		{
 			Debug.Assert(len1 > 0 && len2 > 0 && base1 + len1 == base2);
 
 			// Copy second run into temp array
 			var array = _array; // For performance
-			var tmp = EnsureCapacity(len2);
-			<#= copyRangeFunc #>(array, base2, tmp, 0, len2);
+			var mergeBuffer = EnsureCapacity(len2);
 
-			int cursor1 = base1 + len1 - 1;  // Indexes into a
-			int cursor2 = len2 - 1;          // Indexes into tmp array
-			int dest = base2 + len2 - 1;     // Indexes into a
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			fixed (<#= itemType #> * m = &mergeBuffer[0])
+			fixed (<#= itemType #> * a = &array[0]) {
+			#else
+			var m = mergeBuffer;
+			var a = array;
+			#endif
+<# } else { #>
+			var m = mergeBuffer;
+			var a = array;
+<# } #>
+
+			<#= copyRangeFunc #>(a, base2, m, 0, len2);
+
+			var cursor1 = base1 + len1 - 1;  // Indexes into a
+			var cursor2 = len2 - 1;          // Indexes into mergeBuffer array
+			var dest = base2 + len2 - 1;     // Indexes into a
 
 			// Move last element of first run and deal with degenerate cases
-			array[dest--] = array[cursor1--];
+			a[dest--] = a[cursor1--];
 			if (--len1 == 0)
 			{
-				<#= copyRangeFunc #>(tmp, 0, array, dest - (len2 - 1), len2);
+				<#= copyRangeFunc #>(m, 0, a, dest - (len2 - 1), len2);
 				return;
 			}
 			if (len2 == 1)
 			{
 				dest -= len1;
 				cursor1 -= len1;
-				<#= copyRangeFunc #>(array, cursor1 + 1, array, dest + 1, len1);
-				array[dest] = tmp[cursor2];
+				<#= copyRangeFunc #>(a, cursor1 + 1, dest + 1, len1);
+				a[dest] = m[cursor2];
 				return;
 			}
 
 <# if (usesComparer) { #>
 			var comparer = _comparer;  // Use local variables for performance
 <# } #>
-			int minGallop = _minGallop;
+			var minGallop = _minGallop;
 
 			while (true)
 			{
-				int count1 = 0; // Number of times in a row that first run won
-				int count2 = 0; // Number of times in a row that second run won
+				var count1 = 0; // Number of times in a row that first run won
+				var count2 = 0; // Number of times in a row that second run won
 
 				// Do the straightforward thing until (if ever) one run appears to win consistently.
 				do
 				{
 					Debug.Assert(len1 > 0 && len2 > 1);
-					if (<#= cmp("tmp[cursor2]", "array[cursor1]", "<") #>) // c(tmp[cursor2], a[cursor1]) < 0
+					if (<#= cmp("m[cursor2]", "a[cursor1]", "<") #>) // c(m[cursor2], a[cursor1]) < 0
 					{
-						array[dest--] = array[cursor1--];
+						a[dest--] = a[cursor1--];
 						count1++;
 						count2 = 0;
 						if (--len1 == 0)
@@ -822,7 +1033,7 @@ namespace System.Linq
 					}
 					else
 					{
-						array[dest--] = tmp[cursor2--];
+						a[dest--] = m[cursor2--];
 						count2++;
 						count1 = 0;
 						if (--len2 == 1)
@@ -836,31 +1047,31 @@ namespace System.Linq
 				do
 				{
 					Debug.Assert(len1 > 0 && len2 > 1);
-					count1 = len1 - GallopRight(tmp[cursor2], array, base1, len1, len1 - 1<#= comparerOpt #>);
+					count1 = len1 - GallopRight(m[cursor2], array, base1, len1, len1 - 1<#= comparerOpt #>);
 					if (count1 != 0)
 					{
 						dest -= count1;
 						cursor1 -= count1;
 						len1 -= count1;
-						<#= copyRangeFunc #>(array, cursor1 + 1, array, dest + 1, count1);
+						<#= copyRangeFunc #>(a, cursor1 + 1, dest + 1, count1);
 						if (len1 == 0)
 							goto break_outer;
 					}
-					array[dest--] = tmp[cursor2--];
+					a[dest--] = m[cursor2--];
 					if (--len2 == 1)
 						goto break_outer;
 
-					count2 = len2 - <#= arraySorterName #>GallopLeft(array[cursor1], tmp, 0, len2, len2 - 1<#= comparerOpt #>);
+					count2 = len2 - <#= arraySorterName #>GallopLeft(a[cursor1], mergeBuffer, 0, len2, len2 - 1<#= comparerOpt #>);
 					if (count2 != 0)
 					{
 						dest -= count2;
 						cursor2 -= count2;
 						len2 -= count2;
-						<#= copyRangeFunc #>(tmp, cursor2 + 1, array, dest + 1, count2);
+						<#= copyRangeFunc #>(m, cursor2 + 1, a, dest + 1, count2);
 						if (len2 <= 1)  // len2 == 1 || len2 == 0
 							goto break_outer;
 					}
-					array[dest--] = array[cursor1--];
+					a[dest--] = a[cursor1--];
 					if (--len1 == 0)
 						goto break_outer;
 					minGallop--;
@@ -880,8 +1091,8 @@ namespace System.Linq
 				Debug.Assert(len1 > 0);
 				dest -= len1;
 				cursor1 -= len1;
-				<#= copyRangeFunc #>(array, cursor1 + 1, array, dest + 1, len1);
-				array[dest] = tmp[cursor2];  // Move first elt of run2 to front of merge
+				<#= copyRangeFunc #>(a, cursor1 + 1, dest + 1, len1);
+				a[dest] = m[cursor2];  // Move first elt of run2 to front of merge
 			}
 			else if (len2 == 0)
 			{
@@ -891,11 +1102,17 @@ namespace System.Linq
 			{
 				Debug.Assert(len1 == 0);
 				Debug.Assert(len2 > 0);
-				<#= copyRangeFunc #>(tmp, 0, array, dest - (len2 - 1), len2);
+				<#= copyRangeFunc #>(m, 0, a, dest - (len2 - 1), len2);
 			}
+
+<# if (isArrayOfNative) { #>
+			#if UNSAFE
+			} // fixed (...)
+			#endif
+<# } #>
 		}
 	}
-	
+
 	#endregion
 <# } #>
 
