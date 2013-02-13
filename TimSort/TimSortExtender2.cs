@@ -8,11 +8,26 @@ namespace TimSort
 
 	public static class TimSortExtender2
 	{
-        private static Action<object> BuildDelegate<T>()
+		internal class Sorter
+		{
+			Action<object> SortAll;
+			Action<object, int, int> SortRange;
+		}
+
+		private static Dictionary<Type, Sorter> _sorters;
+
+		private static Sorter GetComparableSortAll<T>(Type comparable)
 	    {
-	        var staticType = typeof (ComparableArrayTimSort<>).MakeGenericType(typeof (T));
-	        var sortMethod = Delegate.CreateDelegate(staticType, staticType.GetMethod("Sort"));
-	        return (Action<object>) sortMethod;
+			var type = typeof(T);
+			Sorter sorter;
+			if (!_sorters.TryGetValue(type, out sorter))
+			{
+				var staticType = typeof(ComparableArrayTimSort<>).MakeGenericType(typeof(T));
+				var sortMethod = Delegate.CreateDelegate(staticType, staticType.GetMethod("SortAll"));
+				sorter = (array) => sortMethod.DynamicInvoke(new object[] { array });
+				_sortAllComparable[type] = sorter;
+			}
+			return sorter;
 	    }
 
 	    #region Array (T[])
@@ -22,10 +37,10 @@ namespace TimSort
 		/// <param name="array">The array.</param>
 		public static void TimSort<T>(this T[] array)
 		{
-		    if (typeof (T) == typeof (Byte)) ByteArrayTimSort.Sort(array as byte[]);
-            else if (typeof(T) == typeof(int)) Int32ArrayTimSort.Sort(array as int[]);
-            else if (typeof(T).IsSubclassOf(typeof(IComparable<T>))) BuildDelegate<T>()(array);
-            else AnyArrayTimSort<T>.Sort(array, Comparer<T>.Default.Compare);
+			if (typeof(T) == typeof(Byte)) ByteArrayTimSort.Sort(array as byte[]);
+			else if (typeof(T) == typeof(int)) Int32ArrayTimSort.Sort(array as int[]);
+			else if (typeof(T).IsSubclassOf(typeof(IComparable<T>))) GetComparableSortAll<T>()(array);
+			else AnyArrayTimSort<T>.Sort(array, Comparer<T>.Default.Compare);
 		}
 
         ///// <summary>Sorts the specified array.</summary>
