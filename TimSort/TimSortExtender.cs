@@ -3,6 +3,7 @@ using System.Reflection;
 using TimSort;
 
 // ReSharper disable CheckNamespace
+
 namespace System.Linq
 {
 	#region class TimSortExtender
@@ -104,7 +105,8 @@ namespace System.Linq
 
         #endregion
 
-        private static SorterReference GetComparableSorter(Type sorterType, Type containerType, Type itemType)
+        private static SorterReference GetComparableSorter<CT>(Type sorterType, Type containerType, Type itemType)
+			where CT: class
 	    {
 			var key = new SorterKey(sorterType, containerType, itemType);
 			SorterReference sorter;
@@ -119,15 +121,15 @@ namespace System.Linq
                 const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
                 sorter = new SorterReference();
 				var staticType = sorterType.MakeGenericType(itemType);
-                var sortAll = Delegate.CreateDelegate(
-                    MakeActionType(MakeContainerType(containerType, itemType)), 
+				var sortAll = (Action<CT>)Delegate.CreateDelegate(
+                    typeof(Action<CT>), 
                     staticType.GetMethod("SortAll", flags));
-                var sortRange = Delegate.CreateDelegate(
+				var sortRange = (Action<CT, int, int>)Delegate.CreateDelegate(
                     MakeActionType(MakeContainerType(containerType, itemType), typeof(int), typeof(int)), 
                     staticType.GetMethod("SortRange", flags));
-                sorter.SortAll = (array) => sortAll.DynamicInvoke(new[] { array });
-                sorter.SortRange = (array, lo, hi) => sortRange.DynamicInvoke(new[] { array, lo, hi });
-			    _sorters[key] = sorter;
+				sorter.SortAll = (array) => sortAll(array as CT);
+				sorter.SortRange = (array, lo, hi) => sortRange(array as CT, lo, hi);
+				_sorters[key] = sorter;
 			}
 
 			return sorter;
@@ -144,7 +146,7 @@ namespace System.Linq
 
             if (IsIComparable<T>())
             {
-                GetComparableSorter(typeof (ComparableArrayTimSort<>), TypeOfArray, typeof (T))
+                GetComparableSorter<T[]>(typeof (ComparableArrayTimSort<>), TypeOfArray, typeof (T))
                     .SortAll(array);
             }
 		    else
@@ -162,7 +164,7 @@ namespace System.Linq
 
             if (IsIComparable<T>())
             {
-                GetComparableSorter(typeof (ComparableArrayTimSort<>), TypeOfArray, typeof (T))
+                GetComparableSorter<T[]>(typeof (ComparableArrayTimSort<>), TypeOfArray, typeof (T))
                     .SortRange(array, lo, hi);
             }
             else
@@ -394,4 +396,5 @@ namespace System.Linq
 
 	#endregion
 }
+
 // ReSharper restore CheckNamespace
