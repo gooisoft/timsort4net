@@ -62,11 +62,10 @@
 //------------------------------------------------------------------------------
 #endregion
 
+using System;
 using System.Diagnostics;
 
-// ReSharper disable CheckNamespace
-
-namespace System.Linq
+namespace TimSort
 {
 	#region class TimSortBase<TList, TItem>
 
@@ -351,5 +350,3 @@ namespace System.Linq
 
 	#endregion
 }
-
-// ReSharper restore CheckNamespace

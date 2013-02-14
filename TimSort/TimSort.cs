@@ -62,12 +62,277 @@
 //------------------------------------------------------------------------------
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 // ReSharper disable CheckNamespace
 
 namespace System.Linq
+{
+    using TimSort;
+
+	#region partial class TimSortExtender
+
+	public static partial class TimSortExtender
+	{
+        /// <summary>Tries to use native sorting on given array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <returns><c>true</c> if sorted using native types, <c>false</c> otherwise.</returns>
+		internal static bool TryNativeTimSort<T>(T[] array)
+		{
+			if (array == null) return true;
+			var typeofT = typeof (T);
+			if (!typeofT.IsValueType) return false;
+
+		    if (typeofT == typeof (Byte)) 
+			{
+				// at runtme we know it is Byte[], but at compile time cast is required
+				var typed = array as Byte[];
+				if (typed == null) return false;
+				ByteArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (SByte)) 
+			{
+				// at runtme we know it is SByte[], but at compile time cast is required
+				var typed = array as SByte[];
+				if (typed == null) return false;
+				SByteArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Int16)) 
+			{
+				// at runtme we know it is Int16[], but at compile time cast is required
+				var typed = array as Int16[];
+				if (typed == null) return false;
+				Int16ArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (UInt16)) 
+			{
+				// at runtme we know it is UInt16[], but at compile time cast is required
+				var typed = array as UInt16[];
+				if (typed == null) return false;
+				UInt16ArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Int32)) 
+			{
+				// at runtme we know it is Int32[], but at compile time cast is required
+				var typed = array as Int32[];
+				if (typed == null) return false;
+				Int32ArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (UInt32)) 
+			{
+				// at runtme we know it is UInt32[], but at compile time cast is required
+				var typed = array as UInt32[];
+				if (typed == null) return false;
+				UInt32ArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Int64)) 
+			{
+				// at runtme we know it is Int64[], but at compile time cast is required
+				var typed = array as Int64[];
+				if (typed == null) return false;
+				Int64ArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (UInt64)) 
+			{
+				// at runtme we know it is UInt64[], but at compile time cast is required
+				var typed = array as UInt64[];
+				if (typed == null) return false;
+				UInt64ArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Single)) 
+			{
+				// at runtme we know it is Single[], but at compile time cast is required
+				var typed = array as Single[];
+				if (typed == null) return false;
+				SingleArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Double)) 
+			{
+				// at runtme we know it is Double[], but at compile time cast is required
+				var typed = array as Double[];
+				if (typed == null) return false;
+				DoubleArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Decimal)) 
+			{
+				// at runtme we know it is Decimal[], but at compile time cast is required
+				var typed = array as Decimal[];
+				if (typed == null) return false;
+				DecimalArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (Char)) 
+			{
+				// at runtme we know it is Char[], but at compile time cast is required
+				var typed = array as Char[];
+				if (typed == null) return false;
+				CharArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (DateTime)) 
+			{
+				// at runtme we know it is DateTime[], but at compile time cast is required
+				var typed = array as DateTime[];
+				if (typed == null) return false;
+				DateTimeArrayTimSort.Sort(typed);
+				return true;
+			}
+		    if (typeofT == typeof (TimeSpan)) 
+			{
+				// at runtme we know it is TimeSpan[], but at compile time cast is required
+				var typed = array as TimeSpan[];
+				if (typed == null) return false;
+				TimeSpanArrayTimSort.Sort(typed);
+				return true;
+			}
+			return false;
+		}
+
+        /// <summary>Tries to use native sorting on given array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="lo">The low limit.</param>
+        /// <param name="hi">The high limit.</param>
+        /// <returns><c>true</c> if sorted using native types, <c>false</c> otherwise.</returns>
+		internal static bool TryNativeTimSort<T>(T[] array, int lo, int hi)
+		{
+			if (array == null) return true;
+			var typeofT = typeof (T);
+			if (!typeofT.IsValueType) return false;
+
+		    if (typeofT == typeof (Byte)) 
+			{
+				// at runtme we know it is Byte[], but at compile time cast is required
+				var typed = array as Byte[];
+				if (typed == null) return false;
+				ByteArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (SByte)) 
+			{
+				// at runtme we know it is SByte[], but at compile time cast is required
+				var typed = array as SByte[];
+				if (typed == null) return false;
+				SByteArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Int16)) 
+			{
+				// at runtme we know it is Int16[], but at compile time cast is required
+				var typed = array as Int16[];
+				if (typed == null) return false;
+				Int16ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (UInt16)) 
+			{
+				// at runtme we know it is UInt16[], but at compile time cast is required
+				var typed = array as UInt16[];
+				if (typed == null) return false;
+				UInt16ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Int32)) 
+			{
+				// at runtme we know it is Int32[], but at compile time cast is required
+				var typed = array as Int32[];
+				if (typed == null) return false;
+				Int32ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (UInt32)) 
+			{
+				// at runtme we know it is UInt32[], but at compile time cast is required
+				var typed = array as UInt32[];
+				if (typed == null) return false;
+				UInt32ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Int64)) 
+			{
+				// at runtme we know it is Int64[], but at compile time cast is required
+				var typed = array as Int64[];
+				if (typed == null) return false;
+				Int64ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (UInt64)) 
+			{
+				// at runtme we know it is UInt64[], but at compile time cast is required
+				var typed = array as UInt64[];
+				if (typed == null) return false;
+				UInt64ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Single)) 
+			{
+				// at runtme we know it is Single[], but at compile time cast is required
+				var typed = array as Single[];
+				if (typed == null) return false;
+				SingleArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Double)) 
+			{
+				// at runtme we know it is Double[], but at compile time cast is required
+				var typed = array as Double[];
+				if (typed == null) return false;
+				DoubleArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Decimal)) 
+			{
+				// at runtme we know it is Decimal[], but at compile time cast is required
+				var typed = array as Decimal[];
+				if (typed == null) return false;
+				DecimalArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (Char)) 
+			{
+				// at runtme we know it is Char[], but at compile time cast is required
+				var typed = array as Char[];
+				if (typed == null) return false;
+				CharArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (DateTime)) 
+			{
+				// at runtme we know it is DateTime[], but at compile time cast is required
+				var typed = array as DateTime[];
+				if (typed == null) return false;
+				DateTimeArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+		    if (typeofT == typeof (TimeSpan)) 
+			{
+				// at runtme we know it is TimeSpan[], but at compile time cast is required
+				var typed = array as TimeSpan[];
+				if (typed == null) return false;
+				TimeSpanArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+			return false;
+		}
+	}
+
+	#endregion
+}
+
+namespace TimSort
 {
 
 	#region class ByteArrayTimSort
@@ -91,6 +356,12 @@ namespace System.Linq
 		{
 			Sort(array, 0, array.Length);
 		}
+
+		// redirection
+		internal static void SortAll(Byte[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Byte[] array, int lo, int hi) { Sort(array, lo, hi); }
 
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
@@ -165,7 +436,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -248,7 +519,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -398,7 +669,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -574,7 +845,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -595,7 +866,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -715,7 +986,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -738,7 +1009,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -858,6 +1129,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(SByte[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(SByte[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -931,7 +1208,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -1014,7 +1291,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -1164,7 +1441,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -1340,7 +1617,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -1361,7 +1638,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -1481,7 +1758,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -1504,7 +1781,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -1624,6 +1901,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Int16[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Int16[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -1697,7 +1980,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -1780,7 +2063,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -1930,7 +2213,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -2106,7 +2389,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -2127,7 +2410,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -2247,7 +2530,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -2270,7 +2553,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -2390,6 +2673,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(UInt16[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(UInt16[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -2463,7 +2752,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -2546,7 +2835,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -2696,7 +2985,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -2872,7 +3161,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -2893,7 +3182,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -3013,7 +3302,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -3036,7 +3325,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -3156,6 +3445,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Int32[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Int32[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -3229,7 +3524,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -3312,7 +3607,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -3462,7 +3757,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -3638,7 +3933,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -3659,7 +3954,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -3779,7 +4074,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -3802,7 +4097,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -3922,6 +4217,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(UInt32[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(UInt32[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -3995,7 +4296,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -4078,7 +4379,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -4228,7 +4529,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -4404,7 +4705,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -4425,7 +4726,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -4545,7 +4846,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -4568,7 +4869,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -4688,6 +4989,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Int64[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Int64[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -4761,7 +5068,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -4844,7 +5151,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -4994,7 +5301,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -5170,7 +5477,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -5191,7 +5498,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -5311,7 +5618,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -5334,7 +5641,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -5454,6 +5761,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(UInt64[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(UInt64[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -5527,7 +5840,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -5610,7 +5923,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -5760,7 +6073,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -5936,7 +6249,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -5957,7 +6270,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -6077,7 +6390,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -6100,7 +6413,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -6220,6 +6533,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Single[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Single[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -6293,7 +6612,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -6376,7 +6695,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -6526,7 +6845,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -6702,7 +7021,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -6723,7 +7042,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -6843,7 +7162,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -6866,7 +7185,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -6986,6 +7305,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Double[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Double[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -7059,7 +7384,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -7142,7 +7467,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -7292,7 +7617,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -7468,7 +7793,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -7489,7 +7814,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -7609,7 +7934,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -7632,7 +7957,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -7752,6 +8077,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Decimal[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Decimal[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -7825,7 +8156,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -7908,7 +8239,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -8058,7 +8389,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -8234,7 +8565,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -8255,7 +8586,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -8375,7 +8706,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -8398,7 +8729,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -8518,6 +8849,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(Char[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(Char[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -8591,7 +8928,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -8674,7 +9011,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -8824,7 +9161,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -9000,7 +9337,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -9021,7 +9358,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -9141,7 +9478,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -9164,7 +9501,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -9284,6 +9621,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(DateTime[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(DateTime[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -9357,7 +9700,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -9440,7 +9783,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -9590,7 +9933,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -9766,7 +10109,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -9787,7 +10130,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -9907,7 +10250,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -9930,7 +10273,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -10050,6 +10393,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(TimeSpan[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(TimeSpan[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -10123,7 +10472,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -10206,7 +10555,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -10356,7 +10705,7 @@ namespace System.Linq
 			#else
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -10532,7 +10881,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -10553,7 +10902,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -10673,7 +11022,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 			#endif
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -10696,7 +11045,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -10823,6 +11172,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length, comparer);
 		}
 
+		// redirection
+		internal static void SortAll(T[] array, Comparison<T> comparer) { Sort(array, comparer); }
+
+		// redirection
+		internal static void SortRange(T[] array, int lo, int hi, Comparison<T> comparer) { Sort(array, lo, hi, comparer); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -10891,7 +11246,7 @@ namespace System.Linq
 		private static void BinarySort(T[] array, int lo, int hi, int start, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -10968,7 +11323,7 @@ namespace System.Linq
 		private static int CountRunAndMakeAscending(T[] array, int lo, int hi, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -11060,7 +11415,7 @@ namespace System.Linq
 		internal static int GallopLeft(T key, T[] array, int lo, int length, int hint, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -11222,7 +11577,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -11243,8 +11598,8 @@ namespace System.Linq
 					return;
 				}
 
-					var comparer = _comparer;  // Use local variables for performance
-					var minGallop = _minGallop;
+				var comparer = _comparer;  // Use local variables for performance
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -11356,7 +11711,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -11379,8 +11734,8 @@ namespace System.Linq
 					return;
 				}
 
-					var comparer = _comparer;  // Use local variables for performance
-					var minGallop = _minGallop;
+				var comparer = _comparer;  // Use local variables for performance
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -11507,6 +11862,12 @@ namespace System.Linq
 			Sort(array, 0, array.Count, comparer);
 		}
 
+		// redirection
+		internal static void SortAll(List<T> array, Comparison<T> comparer) { Sort(array, comparer); }
+
+		// redirection
+		internal static void SortRange(List<T> array, int lo, int hi, Comparison<T> comparer) { Sort(array, lo, hi, comparer); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -11575,7 +11936,7 @@ namespace System.Linq
 		private static void BinarySort(List<T> array, int lo, int hi, int start, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -11652,7 +12013,7 @@ namespace System.Linq
 		private static int CountRunAndMakeAscending(List<T> array, int lo, int hi, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -11702,7 +12063,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(T[] src, int srcIndex, List<T> dst, int dstIndex, int length)
 		{
 			var s = src;
-			{
+			{ // fixed (...)
 				while (length-- > 0) dst[dstIndex++] = s[srcIndex++];
 			} // fixed (...)
 		}
@@ -11716,7 +12077,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(List<T> src, int srcIndex, T[] dst, int dstIndex, int length)
 		{
 			var d = dst;
-			{
+			{ // fixed (...)
 				while (length-- > 0) d[dstIndex++] = src[srcIndex++];
 			} // fixed (...)
 		}
@@ -11806,7 +12167,7 @@ namespace System.Linq
 		internal static int GallopLeft(T key, List<T> array, int lo, int length, int hint, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -11968,7 +12329,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -11989,8 +12350,8 @@ namespace System.Linq
 					return;
 				}
 
-					var comparer = _comparer;  // Use local variables for performance
-					var minGallop = _minGallop;
+				var comparer = _comparer;  // Use local variables for performance
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -12102,7 +12463,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -12125,8 +12486,8 @@ namespace System.Linq
 					return;
 				}
 
-					var comparer = _comparer;  // Use local variables for performance
-					var minGallop = _minGallop;
+				var comparer = _comparer;  // Use local variables for performance
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -12253,6 +12614,12 @@ namespace System.Linq
 			Sort(array, 0, array.Count, comparer);
 		}
 
+		// redirection
+		internal static void SortAll(IList<T> array, Comparison<T> comparer) { Sort(array, comparer); }
+
+		// redirection
+		internal static void SortRange(IList<T> array, int lo, int hi, Comparison<T> comparer) { Sort(array, lo, hi, comparer); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -12321,7 +12688,7 @@ namespace System.Linq
 		private static void BinarySort(IList<T> array, int lo, int hi, int start, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -12398,7 +12765,7 @@ namespace System.Linq
 		private static int CountRunAndMakeAscending(IList<T> array, int lo, int hi, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -12448,7 +12815,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(T[] src, int srcIndex, IList<T> dst, int dstIndex, int length)
 		{
 			var s = src;
-			{
+			{ // fixed (...)
 				while (length-- > 0) dst[dstIndex++] = s[srcIndex++];
 			} // fixed (...)
 		}
@@ -12462,7 +12829,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(IList<T> src, int srcIndex, T[] dst, int dstIndex, int length)
 		{
 			var d = dst;
-			{
+			{ // fixed (...)
 				while (length-- > 0) d[dstIndex++] = src[srcIndex++];
 			} // fixed (...)
 		}
@@ -12552,7 +12919,7 @@ namespace System.Linq
 		internal static int GallopLeft(T key, IList<T> array, int lo, int length, int hint, Comparison<T> comparer)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -12714,7 +13081,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -12735,8 +13102,8 @@ namespace System.Linq
 					return;
 				}
 
-					var comparer = _comparer;  // Use local variables for performance
-					var minGallop = _minGallop;
+				var comparer = _comparer;  // Use local variables for performance
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -12848,7 +13215,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -12871,8 +13238,8 @@ namespace System.Linq
 					return;
 				}
 
-					var comparer = _comparer;  // Use local variables for performance
-					var minGallop = _minGallop;
+				var comparer = _comparer;  // Use local variables for performance
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -12993,6 +13360,12 @@ namespace System.Linq
 			Sort(array, 0, array.Length);
 		}
 
+		// redirection
+		internal static void SortAll(T[] array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(T[] array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -13059,7 +13432,7 @@ namespace System.Linq
 		private static void BinarySort(T[] array, int lo, int hi, int start)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -13135,7 +13508,7 @@ namespace System.Linq
 		private static int CountRunAndMakeAscending(T[] array, int lo, int hi)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -13225,7 +13598,7 @@ namespace System.Linq
 		internal static int GallopLeft(T key, T[] array, int lo, int length, int hint)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -13386,7 +13759,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -13407,7 +13780,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -13519,7 +13892,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				ArrayCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -13542,7 +13915,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -13663,6 +14036,12 @@ namespace System.Linq
 			Sort(array, 0, array.Count);
 		}
 
+		// redirection
+		internal static void SortAll(List<T> array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(List<T> array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -13729,7 +14108,7 @@ namespace System.Linq
 		private static void BinarySort(List<T> array, int lo, int hi, int start)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -13805,7 +14184,7 @@ namespace System.Linq
 		private static int CountRunAndMakeAscending(List<T> array, int lo, int hi)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -13855,7 +14234,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(T[] src, int srcIndex, List<T> dst, int dstIndex, int length)
 		{
 			var s = src;
-			{
+			{ // fixed (...)
 				while (length-- > 0) dst[dstIndex++] = s[srcIndex++];
 			} // fixed (...)
 		}
@@ -13869,7 +14248,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(List<T> src, int srcIndex, T[] dst, int dstIndex, int length)
 		{
 			var d = dst;
-			{
+			{ // fixed (...)
 				while (length-- > 0) d[dstIndex++] = src[srcIndex++];
 			} // fixed (...)
 		}
@@ -13957,7 +14336,7 @@ namespace System.Linq
 		internal static int GallopLeft(T key, List<T> array, int lo, int length, int hint)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -14118,7 +14497,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -14139,7 +14518,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -14251,7 +14630,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -14274,7 +14653,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -14395,6 +14774,12 @@ namespace System.Linq
 			Sort(array, 0, array.Count);
 		}
 
+		// redirection
+		internal static void SortAll(IList<T> array) { Sort(array); }
+
+		// redirection
+		internal static void SortRange(IList<T> array, int lo, int hi) { Sort(array, lo, hi); }
+
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -14461,7 +14846,7 @@ namespace System.Linq
 		private static void BinarySort(IList<T> array, int lo, int hi, int start)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -14537,7 +14922,7 @@ namespace System.Linq
 		private static int CountRunAndMakeAscending(IList<T> array, int lo, int hi)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -14587,7 +14972,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(T[] src, int srcIndex, IList<T> dst, int dstIndex, int length)
 		{
 			var s = src;
-			{
+			{ // fixed (...)
 				while (length-- > 0) dst[dstIndex++] = s[srcIndex++];
 			} // fixed (...)
 		}
@@ -14601,7 +14986,7 @@ namespace System.Linq
 		private static void IndexedCopyRange(IList<T> src, int srcIndex, T[] dst, int dstIndex, int length)
 		{
 			var d = dst;
-			{
+			{ // fixed (...)
 				while (length-- > 0) d[dstIndex++] = src[srcIndex++];
 			} // fixed (...)
 		}
@@ -14689,7 +15074,7 @@ namespace System.Linq
 		internal static int GallopLeft(T key, IList<T> array, int lo, int length, int hint)
 		{
 			var a = array;
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -14850,7 +15235,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -14871,7 +15256,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{
@@ -14983,7 +15368,7 @@ namespace System.Linq
 
 			var m = mergeBuffer;
 			var a = array;
-			{
+			{ // fixed (...)
 				IndexedCopyRange(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -15006,7 +15391,7 @@ namespace System.Linq
 					return;
 				}
 
-					var minGallop = _minGallop;
+				var minGallop = _minGallop;
 
 				while (true)
 				{

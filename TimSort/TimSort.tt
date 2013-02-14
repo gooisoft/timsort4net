@@ -67,6 +67,7 @@
 //------------------------------------------------------------------------------
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -74,6 +75,8 @@ using System.Diagnostics;
 
 namespace System.Linq
 {
+    using TimSort;
+
 <# 
     var list = new List<VectorDefinition>();
     var native_types = new[] { 
@@ -109,7 +112,66 @@ namespace System.Linq
 		Name = "ComparableList", VectorType = "List<T>", CompareMethod = CompareMethod.Comparable, ArraySorter = "ComparableArray" });
     list.Add(new VectorDefinition { 
 		Name = "ComparableIList", VectorType = "IList<T>", CompareMethod = CompareMethod.Comparable, ArraySorter = "ComparableArray" });
+#>
+	#region partial class TimSortExtender
 
+	public static partial class TimSortExtender
+	{
+        /// <summary>Tries to use native sorting on given array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <returns><c>true</c> if sorted using native types, <c>false</c> otherwise.</returns>
+		internal static bool TryNativeTimSort<T>(T[] array)
+		{
+			if (array == null) return true;
+			var typeofT = typeof (T);
+			if (!typeofT.IsValueType) return false;
+
+<# foreach (var type in native_types) { #>
+		    if (typeofT == typeof (<#= type #>)) 
+			{
+				// at runtme we know it is <#= type #>[], but at compile time cast is required
+				var typed = array as <#= type #>[];
+				if (typed == null) return false;
+				<#= type #>ArrayTimSort.Sort(typed);
+				return true;
+			}
+<# } #>
+			return false;
+		}
+
+        /// <summary>Tries to use native sorting on given array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="lo">The low limit.</param>
+        /// <param name="hi">The high limit.</param>
+        /// <returns><c>true</c> if sorted using native types, <c>false</c> otherwise.</returns>
+		internal static bool TryNativeTimSort<T>(T[] array, int lo, int hi)
+		{
+			if (array == null) return true;
+			var typeofT = typeof (T);
+			if (!typeofT.IsValueType) return false;
+
+<# foreach (var type in native_types) { #>
+		    if (typeofT == typeof (<#= type #>)) 
+			{
+				// at runtme we know it is <#= type #>[], but at compile time cast is required
+				var typed = array as <#= type #>[];
+				if (typed == null) return false;
+				<#= type #>ArrayTimSort.Sort(typed, lo, hi);
+				return true;
+			}
+<# } #>
+			return false;
+		}
+	}
+
+	#endregion
+}
+
+namespace TimSort
+{
+<#
 	foreach (var item in list) 
 	{ 
 		var usesComparer = (item.CompareMethod == CompareMethod.Comparer);
@@ -192,6 +254,12 @@ namespace System.Linq
 		{
 			Sort(array, 0, array.<#= lengthProperty #><#= comparerOpt #>);
 		}
+
+		// redirection
+		internal static void SortAll(<#= arrayArg #><#= comparerArg #>) { Sort(array<#= comparerOpt #>); }
+
+		// redirection
+		internal static void SortRange(<#= arrayArg #>, int lo, int hi<#= comparerArg #>) { Sort(array, lo, hi<#= comparerOpt #>); }
 
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
@@ -278,7 +346,7 @@ namespace System.Linq
 <# } else { #>
 			var a = array;
 <# } #>
-			{
+			{ // fixed (...)
 				Debug.Assert(lo <= start && start <= hi);
 
 				if (start == lo) start++;
@@ -370,7 +438,7 @@ namespace System.Linq
 <# } else { #>
 			var a = array;
 <# } #>
-			{
+			{ // fixed (...)
 				Debug.Assert(lo < hi);
 				var runHi = lo + 1;
 				if (runHi == hi) return 1;
@@ -434,7 +502,7 @@ namespace System.Linq
 <# } else { #>
 			var s = src;
 <# } #>
-			{
+			{ // fixed (...)
 				while (length-- > 0) dst[dstIndex++] = s[srcIndex++];
 			} // fixed (...)
 		}
@@ -461,7 +529,7 @@ namespace System.Linq
 <# } else { #>
 			var d = dst;
 <# } #>
-			{
+			{ // fixed (...)
 				while (length-- > 0) d[dstIndex++] = src[srcIndex++];
 			} // fixed (...)
 		}
@@ -624,7 +692,7 @@ namespace System.Linq
 <# } else { #>
 			var a = array;
 <# } #>
-			{
+			{ // fixed (...)
 				Debug.Assert(length > 0 && hint >= 0 && hint < length);
 				var lastOfs = 0;
 				var ofs = 1;
@@ -816,7 +884,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 <# } #>
-			{
+			{ // fixed (...)
 				<#= copyRangeFunc #>(a, base1, m, 0, len1);
 
 				var cursor1 = 0;       // Indexes into tmp array
@@ -837,9 +905,9 @@ namespace System.Linq
 					return;
 				}
 
-	<# if (usesComparer) { #>
+<# if (usesComparer) { #>
 				var comparer = _comparer;  // Use local variables for performance
-	<# } #>
+<# } #>
 				var minGallop = _minGallop;
 
 				while (true)
@@ -967,7 +1035,7 @@ namespace System.Linq
 			var m = mergeBuffer;
 			var a = array;
 <# } #>
-			{
+			{ // fixed (...)
 				<#= copyRangeFunc #>(a, base2, m, 0, len2);
 
 				var cursor1 = base1 + len1 - 1;  // Indexes into a
@@ -990,9 +1058,9 @@ namespace System.Linq
 					return;
 				}
 
-	<# if (usesComparer) { #>
+<# if (usesComparer) { #>
 				var comparer = _comparer;  // Use local variables for performance
-	<# } #>
+<# } #>
 				var minGallop = _minGallop;
 
 				while (true)
