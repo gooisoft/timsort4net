@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using TimSort;
 
@@ -32,17 +30,20 @@ namespace System.Linq
             #region fields (public)
 
             public readonly Type SorterType;
+            public readonly Type ContainerType;
             public readonly Type ItemType;
 
             #endregion
 
             #region constructor
 
-            public SorterKey(Type sorterType, Type itemType)
+            public SorterKey(Type sorterType, Type containerType, Type itemType)
 	        {
                 if (sorterType == null) throw new ArgumentNullException("sorterType");
+                if (containerType == null) throw new ArgumentNullException("containerType");
                 if (itemType == null) throw new ArgumentNullException("itemType");
 	            SorterType = sorterType;
+                ContainerType = containerType;
 	            ItemType = itemType;
 	        }
 
@@ -52,7 +53,7 @@ namespace System.Linq
 
             public override int GetHashCode()
             {
-                return SorterType.GetHashCode() ^ ItemType.GetHashCode();
+                return SorterType.GetHashCode() ^ ContainerType.GetHashCode() ^ ItemType.GetHashCode();
             }
 
             public override bool Equals(object obj)
@@ -63,6 +64,7 @@ namespace System.Linq
                 if (ReferenceEquals(other, null)) return false;
                 return 
                     other.ItemType == ItemType && 
+                    other.ContainerType == ContainerType &&
                     other.SorterType == SorterType;
             }
 
@@ -73,9 +75,38 @@ namespace System.Linq
 
         private static Dictionary<SorterKey, SorterReference> _sorters;
 
-		private static SorterReference GetComparableSorter(Type sorterType, Type itemType)
+        #region reflection helpers
+
+	    private static readonly Type TypeOfArray = typeof (Array);
+
+        private static bool IsIComparable<T>()
+        {
+            return (typeof(IComparable<T>)).IsAssignableFrom(typeof(T));
+        }
+
+	    private static Type MakeContainerType(Type container, Type item)
 	    {
-			var key = new SorterKey(sorterType, itemType);
+	        return
+                container == TypeOfArray
+                ? item.MakeArrayType() 
+                : item.MakeGenericType(item);
+	    }
+
+        private static Type MakeActionType(Type parameterTypes)
+        {
+            return typeof (Action<>).MakeGenericType(parameterTypes);
+        }
+
+        private static Type MakeActionType(Type parameterA, Type parameterB, Type parameterC)
+        {
+            return typeof(Action<,,>).MakeGenericType(parameterA, parameterB, parameterC);
+        }
+
+        #endregion
+
+        private static SorterReference GetComparableSorter(Type sorterType, Type containerType, Type itemType)
+	    {
+			var key = new SorterKey(sorterType, containerType, itemType);
 			SorterReference sorter;
 
 		    if (_sorters == null)
@@ -88,8 +119,12 @@ namespace System.Linq
                 const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
                 sorter = new SorterReference();
 				var staticType = sorterType.MakeGenericType(itemType);
-                var sortAll = Delegate.CreateDelegate(typeof(), staticType.GetMethod("SortAll", flags));
-                var sortRange = Delegate.CreateDelegate(typeof(Action<object, int, int>), staticType.GetMethod("SortRange", flags));
+                var sortAll = Delegate.CreateDelegate(
+                    MakeActionType(MakeContainerType(containerType, itemType)), 
+                    staticType.GetMethod("SortAll", flags));
+                var sortRange = Delegate.CreateDelegate(
+                    MakeActionType(MakeContainerType(containerType, itemType), typeof(int), typeof(int)), 
+                    staticType.GetMethod("SortRange", flags));
                 sorter.SortAll = (array) => sortAll.DynamicInvoke(new[] { array });
                 sorter.SortRange = (array, lo, hi) => sortRange.DynamicInvoke(new[] { array, lo, hi });
 			    _sorters[key] = sorter;
@@ -109,7 +144,8 @@ namespace System.Linq
 
             if (IsIComparable<T>())
             {
-                GetComparableSorter(typeof (ComparableArrayTimSort<>), typeof (T)).SortAll(array);
+                GetComparableSorter(typeof (ComparableArrayTimSort<>), TypeOfArray, typeof (T))
+                    .SortAll(array);
             }
 		    else
 		    {
@@ -126,17 +162,13 @@ namespace System.Linq
 
             if (IsIComparable<T>())
             {
-                GetComparableSorter(typeof (ComparableArrayTimSort<>), typeof (T)).SortRange(array, lo, hi);
+                GetComparableSorter(typeof (ComparableArrayTimSort<>), TypeOfArray, typeof (T))
+                    .SortRange(array, lo, hi);
             }
             else
             {
                 AnyArrayTimSort<T>.Sort(array, lo, hi, Comparer<T>.Default.Compare);
             }
-        }
-
-        private static bool IsIComparable<T>()
-        {
-            return (typeof (IComparable<T>)).IsAssignableFrom(typeof (T));
         }
 
 	    public static void TimSort<T>(this T[] array, Comparison<T> compare)

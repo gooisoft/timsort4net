@@ -11172,12 +11172,6 @@ namespace TimSort
 			Sort(array, 0, array.Length, comparer);
 		}
 
-		// redirection
-		internal static void SortAll(T[] array, Comparison<T> comparer) { Sort(array, comparer); }
-
-		// redirection
-		internal static void SortRange(T[] array, int lo, int hi, Comparison<T> comparer) { Sort(array, lo, hi, comparer); }
-
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
@@ -11861,12 +11855,6 @@ namespace TimSort
 		{
 			Sort(array, 0, array.Count, comparer);
 		}
-
-		// redirection
-		internal static void SortAll(List<T> array, Comparison<T> comparer) { Sort(array, comparer); }
-
-		// redirection
-		internal static void SortRange(List<T> array, int lo, int hi, Comparison<T> comparer) { Sort(array, lo, hi, comparer); }
 
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
@@ -12613,12 +12601,6 @@ namespace TimSort
 		{
 			Sort(array, 0, array.Count, comparer);
 		}
-
-		// redirection
-		internal static void SortAll(IList<T> array, Comparison<T> comparer) { Sort(array, comparer); }
-
-		// redirection
-		internal static void SortRange(IList<T> array, int lo, int hi, Comparison<T> comparer) { Sort(array, lo, hi, comparer); }
 
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>

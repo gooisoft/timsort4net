@@ -255,12 +255,14 @@ namespace TimSort
 			Sort(array, 0, array.<#= lengthProperty #><#= comparerOpt #>);
 		}
 
+<# if (!usesComparer) { #>
 		// redirection
-		internal static void SortAll(<#= arrayArg #><#= comparerArg #>) { Sort(array<#= comparerOpt #>); }
+		internal static void SortAll(<#= arrayArg #>) { Sort(array); }
 
 		// redirection
-		internal static void SortRange(<#= arrayArg #>, int lo, int hi<#= comparerArg #>) { Sort(array, lo, hi<#= comparerOpt #>); }
+		internal static void SortRange(<#= arrayArg #>, int lo, int hi) { Sort(array, lo, hi); }
 
+<# } #>
 		/// <summary>Sorts the specified array.</summary>
 		/// <param name="array">Array to be sorted.</param>
 		/// <param name="lo">the index of the first element in the range to be sorted.</param>
