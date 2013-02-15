@@ -3,6 +3,9 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
+// This files has been generated using TimSort.tt
+// all your changes to this file will be lost
+
 #region Licence
 
 /*
@@ -72,51 +75,26 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 // ReSharper disable CheckNamespace
-
-namespace System.Linq
-{
-    using TimSort;
-
-<# 
-    var list = new List<VectorDefinition>();
+<#
     var native_types = new[] { 
         "Byte", "SByte", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
         "Single", "Double", "Decimal",
         "Char", 
         "DateTime", "TimeSpan",
     };
-
-    foreach (var native_type in native_types)
-    {
-        var array_sorter = native_type + "Array";
-        list.Add(new VectorDefinition { 
-            Name = array_sorter, ItemType = native_type, CompareMethod = CompareMethod.Native });
-		/*
-        list.Add(new VectorDefinition { 
-            Name = native_type + "List", VectorType = "List<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });
-        list.Add(new VectorDefinition { 
-            Name = native_type + "IList", VectorType = "IList<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });
-		*/
-    }
-
-    list.Add(new VectorDefinition { 
-		Name = "AnyArray", CompareMethod = CompareMethod.Comparer });
-    list.Add(new VectorDefinition { 
-		Name = "AnyList", VectorType = "List<T>", CompareMethod = CompareMethod.Comparer, ArraySorter = "AnyArray" });
-    list.Add(new VectorDefinition { 
-		Name = "AnyIList", VectorType = "IList<T>", CompareMethod = CompareMethod.Comparer, ArraySorter = "AnyArray" });
-
-    list.Add(new VectorDefinition { 
-		Name = "ComparableArray", CompareMethod = CompareMethod.Comparable });
-    list.Add(new VectorDefinition { 
-		Name = "ComparableList", VectorType = "List<T>", CompareMethod = CompareMethod.Comparable, ArraySorter = "ComparableArray" });
-    list.Add(new VectorDefinition { 
-		Name = "ComparableIList", VectorType = "IList<T>", CompareMethod = CompareMethod.Comparable, ArraySorter = "ComparableArray" });
 #>
+
+namespace System.Linq
+{
+    using TimSort;
+
 	#region partial class TimSortExtender
 
 	public static partial class TimSortExtender
 	{
+
+		#region TryNativeTimSort
+
         /// <summary>Tries to use native sorting on given array.</summary>
         /// <typeparam name="T">Any type.</typeparam>
         /// <param name="array">The array.</param>
@@ -164,11 +142,189 @@ namespace System.Linq
 <# } #>
 			return false;
 		}
+
+		#endregion
+
+<# 
+	var containers = new[] {
+		new { Name = "Array", Type = "T[]", Length = "Length", Native = true, },
+		new { Name = "List", Type = "List<T>", Length = "Count", Native = false, },
+		new { Name = "IList", Type = "IList<T>", Length = "Count", Native = false, }
+	};
+
+	foreach (var container in containers)
+	{
+		var name = container.Name;
+		var type = container.Type;
+		var length = container.Length;
+		var native = container.Native;
+#>
+	    #region <#= name #>
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <param name="array">The array.</param>
+		public static void TimSort<T>(this <#= type #> array)
+		{
+			if (array == null) throw new ArgumentNullException("array");
+			if (array.<#= length #> < 2) return;
+
+<# if (native) { #>
+		    if (TryNativeTimSort(array)) return;
+<# } else { #>
+			var simpler = GetInternalMember(array);
+			if (simpler != null)
+			{
+				TimSort(simpler, 0, array.<#= length #>);
+				return;
+			}
+<# } #>
+
+		    if (TryComparableTimeSort(array)) return;
+            Any<#= name #>TimSort<T>.Sort(array, Comparer<T>.Default.Compare);
+		}
+
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Type of item.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        public static void TimSort<T>(this <#= type #> array, int start, int length)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            length = Math.Min(length, array.<#= length #> - start);
+            if (length < 2) return;
+
+<# if (native) { #>
+            if (TryNativeTimSort(array, start, start + length)) return; 
+<# } else { #>
+			var simpler = GetInternalMember(array);
+			if (simpler != null)
+			{
+				TimSort(simpler, start, length);
+				return;
+			}
+<# } #>
+
+            if (TryComparableTimeSort(array, start, start + length)) return;
+
+            Any<#= name #>TimSort<T>.Sort(array, start, start + length, Comparer<T>.Default.Compare);
+        }
+
+        public static void TimSort<T>(this <#= type #> array, int start, int length, Comparison<T> compare)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+            length = Math.Min(length, array.<#= length #> - start);
+            if (length < 2) return;
+
+<# if (!native) { #>
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, start, length, compare); 
+				return; 
+			}
+<# } #>
+
+            Any<#= name #>TimSort<T>.Sort(array, start, start + length, compare);
+        }
+
+	    public static void TimSort<T>(this <#= type #> array, Comparison<T> compare)
+	    {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+			if (array.<#= length #> < 2) return;
+
+<# if (!native) { #>
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, 0, array.<#= length #>, compare); 
+				return; 
+			}
+<# } #>
+
+            Any<#= name #>TimSort<T>.Sort(array, compare);
+	    }
+
+        public static void TimSort<T>(this <#= type #> array, int start, int length, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+            length = Math.Min(length, array.<#= length #> - start);
+            if (length < 2) return;
+
+<# if (!native) { #>
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, start, length, comparer); 
+				return; 
+			}
+<# } #>
+
+            Any<#= name #>TimSort<T>.Sort(array, start, start + length, comparer.Compare);
+        }
+
+        public static void TimSort<T>(this <#= type #> array, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+			if (array.<#= length #> < 2) return;
+
+<# if (!native) { #>
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, 0, array.<#= length #>, comparer); 
+				return; 
+			}
+<# } #>
+
+            Any<#= name #>TimSort<T>.Sort(array, comparer.Compare);
+        }
+
+        #endregion
+
+<#
+	}
+#>
 	}
 
 	#endregion
 }
 
+<# 
+    var list = new List<VectorDefinition>();
+
+    foreach (var native_type in native_types)
+    {
+        var array_sorter = native_type + "Array";
+        list.Add(new VectorDefinition { 
+            Name = array_sorter, ItemType = native_type, CompareMethod = CompareMethod.Native });
+		/*
+        list.Add(new VectorDefinition { 
+            Name = native_type + "List", VectorType = "List<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });
+        list.Add(new VectorDefinition { 
+            Name = native_type + "IList", VectorType = "IList<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });
+		*/
+    }
+
+    list.Add(new VectorDefinition { 
+		Name = "AnyArray", CompareMethod = CompareMethod.Comparer });
+    list.Add(new VectorDefinition { 
+		Name = "AnyList", VectorType = "List<T>", CompareMethod = CompareMethod.Comparer, ArraySorter = "AnyArray" });
+    list.Add(new VectorDefinition { 
+		Name = "AnyIList", VectorType = "IList<T>", CompareMethod = CompareMethod.Comparer, ArraySorter = "AnyArray" });
+
+    list.Add(new VectorDefinition { 
+		Name = "ComparableArray", CompareMethod = CompareMethod.Comparable });
+    list.Add(new VectorDefinition { 
+		Name = "ComparableList", VectorType = "List<T>", CompareMethod = CompareMethod.Comparable, ArraySorter = "ComparableArray" });
+    list.Add(new VectorDefinition { 
+		Name = "ComparableIList", VectorType = "IList<T>", CompareMethod = CompareMethod.Comparable, ArraySorter = "ComparableArray" });
+#>
 namespace TimSort
 {
 <#

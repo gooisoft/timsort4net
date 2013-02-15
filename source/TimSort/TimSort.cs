@@ -1,4 +1,7 @@
-﻿#region Licence
+﻿// This files has been generated using TimSort.tt
+// all your changes to this file will be lost
+
+#region Licence
 
 /*
  * Copyright (C) 2008 The Android Open Source Project
@@ -76,6 +79,9 @@ namespace System.Linq
 
 	public static partial class TimSortExtender
 	{
+
+		#region TryNativeTimSort
+
         /// <summary>Tries to use native sorting on given array.</summary>
         /// <typeparam name="T">Any type.</typeparam>
         /// <param name="array">The array.</param>
@@ -327,6 +333,311 @@ namespace System.Linq
 			}
 			return false;
 		}
+
+		#endregion
+
+	    #region Array
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <param name="array">The array.</param>
+		public static void TimSort<T>(this T[] array)
+		{
+			if (array == null) throw new ArgumentNullException("array");
+			if (array.Length < 2) return;
+
+		    if (TryNativeTimSort(array)) return;
+
+		    if (TryComparableTimeSort(array)) return;
+            AnyArrayTimSort<T>.Sort(array, Comparer<T>.Default.Compare);
+		}
+
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Type of item.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        public static void TimSort<T>(this T[] array, int start, int length)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            length = Math.Min(length, array.Length - start);
+            if (length < 2) return;
+
+            if (TryNativeTimSort(array, start, start + length)) return; 
+
+            if (TryComparableTimeSort(array, start, start + length)) return;
+
+            AnyArrayTimSort<T>.Sort(array, start, start + length, Comparer<T>.Default.Compare);
+        }
+
+        public static void TimSort<T>(this T[] array, int start, int length, Comparison<T> compare)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+            length = Math.Min(length, array.Length - start);
+            if (length < 2) return;
+
+
+            AnyArrayTimSort<T>.Sort(array, start, start + length, compare);
+        }
+
+	    public static void TimSort<T>(this T[] array, Comparison<T> compare)
+	    {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+			if (array.Length < 2) return;
+
+
+            AnyArrayTimSort<T>.Sort(array, compare);
+	    }
+
+        public static void TimSort<T>(this T[] array, int start, int length, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+            length = Math.Min(length, array.Length - start);
+            if (length < 2) return;
+
+
+            AnyArrayTimSort<T>.Sort(array, start, start + length, comparer.Compare);
+        }
+
+        public static void TimSort<T>(this T[] array, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+			if (array.Length < 2) return;
+
+
+            AnyArrayTimSort<T>.Sort(array, comparer.Compare);
+        }
+
+        #endregion
+
+	    #region List
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <param name="array">The array.</param>
+		public static void TimSort<T>(this List<T> array)
+		{
+			if (array == null) throw new ArgumentNullException("array");
+			if (array.Count < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null)
+			{
+				TimSort(simpler, 0, array.Count);
+				return;
+			}
+
+		    if (TryComparableTimeSort(array)) return;
+            AnyListTimSort<T>.Sort(array, Comparer<T>.Default.Compare);
+		}
+
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Type of item.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        public static void TimSort<T>(this List<T> array, int start, int length)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            length = Math.Min(length, array.Count - start);
+            if (length < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null)
+			{
+				TimSort(simpler, start, length);
+				return;
+			}
+
+            if (TryComparableTimeSort(array, start, start + length)) return;
+
+            AnyListTimSort<T>.Sort(array, start, start + length, Comparer<T>.Default.Compare);
+        }
+
+        public static void TimSort<T>(this List<T> array, int start, int length, Comparison<T> compare)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+            length = Math.Min(length, array.Count - start);
+            if (length < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, start, length, compare); 
+				return; 
+			}
+
+            AnyListTimSort<T>.Sort(array, start, start + length, compare);
+        }
+
+	    public static void TimSort<T>(this List<T> array, Comparison<T> compare)
+	    {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+			if (array.Count < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, 0, array.Count, compare); 
+				return; 
+			}
+
+            AnyListTimSort<T>.Sort(array, compare);
+	    }
+
+        public static void TimSort<T>(this List<T> array, int start, int length, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+            length = Math.Min(length, array.Count - start);
+            if (length < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, start, length, comparer); 
+				return; 
+			}
+
+            AnyListTimSort<T>.Sort(array, start, start + length, comparer.Compare);
+        }
+
+        public static void TimSort<T>(this List<T> array, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+			if (array.Count < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, 0, array.Count, comparer); 
+				return; 
+			}
+
+            AnyListTimSort<T>.Sort(array, comparer.Compare);
+        }
+
+        #endregion
+
+	    #region IList
+
+		/// <summary>Sorts the specified array.</summary>
+		/// <typeparam name="T">Type of item.</typeparam>
+		/// <param name="array">The array.</param>
+		public static void TimSort<T>(this IList<T> array)
+		{
+			if (array == null) throw new ArgumentNullException("array");
+			if (array.Count < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null)
+			{
+				TimSort(simpler, 0, array.Count);
+				return;
+			}
+
+		    if (TryComparableTimeSort(array)) return;
+            AnyIListTimSort<T>.Sort(array, Comparer<T>.Default.Compare);
+		}
+
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Type of item.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        public static void TimSort<T>(this IList<T> array, int start, int length)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            length = Math.Min(length, array.Count - start);
+            if (length < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null)
+			{
+				TimSort(simpler, start, length);
+				return;
+			}
+
+            if (TryComparableTimeSort(array, start, start + length)) return;
+
+            AnyIListTimSort<T>.Sort(array, start, start + length, Comparer<T>.Default.Compare);
+        }
+
+        public static void TimSort<T>(this IList<T> array, int start, int length, Comparison<T> compare)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+            length = Math.Min(length, array.Count - start);
+            if (length < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, start, length, compare); 
+				return; 
+			}
+
+            AnyIListTimSort<T>.Sort(array, start, start + length, compare);
+        }
+
+	    public static void TimSort<T>(this IList<T> array, Comparison<T> compare)
+	    {
+			if (array == null) throw new ArgumentNullException("array");
+            if (compare == null) throw new ArgumentNullException("compare");
+			if (array.Count < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, 0, array.Count, compare); 
+				return; 
+			}
+
+            AnyIListTimSort<T>.Sort(array, compare);
+	    }
+
+        public static void TimSort<T>(this IList<T> array, int start, int length, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+            length = Math.Min(length, array.Count - start);
+            if (length < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, start, length, comparer); 
+				return; 
+			}
+
+            AnyIListTimSort<T>.Sort(array, start, start + length, comparer.Compare);
+        }
+
+        public static void TimSort<T>(this IList<T> array, Comparer<T> comparer)
+        {
+			if (array == null) throw new ArgumentNullException("array");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+			if (array.Count < 2) return;
+
+			var simpler = GetInternalMember(array);
+			if (simpler != null) 
+			{ 
+				TimSort(simpler, 0, array.Count, comparer); 
+				return; 
+			}
+
+            AnyIListTimSort<T>.Sort(array, comparer.Compare);
+        }
+
+        #endregion
+
 	}
 
 	#endregion
