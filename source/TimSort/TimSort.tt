@@ -161,6 +161,37 @@ namespace System.Linq
 #>
 	    #region <#= name #>
 
+<# if (!native) { #>
+        /// <summary>Tries to extract internal representation and sort it (it should be much faster).</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="list">The list.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        /// <returns><c>true</c> if succeeded, <c>false</c> otherwise.</returns>
+        private static bool TryInternalTimSort<T>(<#= type #> list, int start, int length)
+        {
+            var array = GetInternalMember(list);
+            if (array == null) return false;
+            TimSort(array, start, length);
+            return true;
+        }
+
+        /// <summary>Tries to extract internal representation and sort it (it should be much faster).</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="list">The list.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        /// <param name="compare">The compare method.</param>
+        /// <returns><c>true</c> if succeeded, <c>false</c> otherwise.</returns>
+        private static bool TryInternalTimSort<T>(<#= type #> list, int start, int length, Comparison<T> compare)
+        {
+            var array = GetInternalMember(list);
+            if (array == null) return false;
+            TimSort(array, start, length, compare);
+            return true;
+        }
+
+<# } #>
 		/// <summary>Sorts the specified array.</summary>
 		/// <typeparam name="T">Type of item.</typeparam>
 		/// <param name="array">The array.</param>
@@ -171,15 +202,11 @@ namespace System.Linq
 
 <# if (native) { #>
 		    if (TryNativeTimSort(array)) return;
-<# } else { #>
-			var simpler = GetInternalMember(array);
-			if (simpler != null)
-			{
-				TimSort(simpler, 0, array.<#= length #>);
-				return;
-			}
-<# } #>
 
+<# } else { #>
+			if (TryInternalTimSort(array, 0, array.<#= length #>)) return;
+
+<# } #>
 		    if (TryComparableTimeSort(array)) return;
             Any<#= name #>TimSort<T>.Sort(array, Comparer<T>.Default.Compare);
 		}
@@ -197,20 +224,23 @@ namespace System.Linq
 
 <# if (native) { #>
             if (TryNativeTimSort(array, start, start + length)) return; 
-<# } else { #>
-			var simpler = GetInternalMember(array);
-			if (simpler != null)
-			{
-				TimSort(simpler, start, length);
-				return;
-			}
-<# } #>
 
+<# } else { #>
+			if (TryInternalTimSort(array, start, length)) return;
+
+<# } #>
             if (TryComparableTimeSort(array, start, start + length)) return;
 
             Any<#= name #>TimSort<T>.Sort(array, start, start + length, Comparer<T>.Default.Compare);
         }
 
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        /// <param name="compare">The compare method.</param>
+        /// <exception cref="System.ArgumentNullException">array or compare</exception>
         public static void TimSort<T>(this <#= type #> array, int start, int length, Comparison<T> compare)
         {
 			if (array == null) throw new ArgumentNullException("array");
@@ -219,17 +249,17 @@ namespace System.Linq
             if (length < 2) return;
 
 <# if (!native) { #>
-			var simpler = GetInternalMember(array);
-			if (simpler != null) 
-			{ 
-				TimSort(simpler, start, length, compare); 
-				return; 
-			}
-<# } #>
+			if (TryInternalTimSort(array, start, length, compare)) return;
 
+<# } #>
             Any<#= name #>TimSort<T>.Sort(array, start, start + length, compare);
         }
 
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="compare">The compare method.</param>
+        /// <exception cref="System.ArgumentNullException">array or compare</exception>
 	    public static void TimSort<T>(this <#= type #> array, Comparison<T> compare)
 	    {
 			if (array == null) throw new ArgumentNullException("array");
@@ -237,52 +267,51 @@ namespace System.Linq
 			if (array.<#= length #> < 2) return;
 
 <# if (!native) { #>
-			var simpler = GetInternalMember(array);
-			if (simpler != null) 
-			{ 
-				TimSort(simpler, 0, array.<#= length #>, compare); 
-				return; 
-			}
-<# } #>
+			if (TryInternalTimSort(array, 0, array.<#= length #>, compare)) return;
 
+<# } #>
             Any<#= name #>TimSort<T>.Sort(array, compare);
 	    }
 
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        /// <param name="comparer">The comparer.</param>
+        /// <exception cref="System.ArgumentNullException">array or compare</exception>
         public static void TimSort<T>(this <#= type #> array, int start, int length, Comparer<T> comparer)
         {
 			if (array == null) throw new ArgumentNullException("array");
             if (comparer == null) throw new ArgumentNullException("comparer");
             length = Math.Min(length, array.<#= length #> - start);
             if (length < 2) return;
+			Comparison<T> compare = comparer.Compare;
 
 <# if (!native) { #>
-			var simpler = GetInternalMember(array);
-			if (simpler != null) 
-			{ 
-				TimSort(simpler, start, length, comparer); 
-				return; 
-			}
-<# } #>
+			if (TryInternalTimSort(array, start, length, compare)) return;
 
-            Any<#= name #>TimSort<T>.Sort(array, start, start + length, comparer.Compare);
+<# } #>
+            Any<#= name #>TimSort<T>.Sort(array, start, start + length, compare);
         }
 
+        /// <summary>Sorts the specified array.</summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="array">The array.</param>
+        /// <param name="comparer">The comparer.</param>
+        /// <exception cref="System.ArgumentNullException">array or compare</exception>
         public static void TimSort<T>(this <#= type #> array, Comparer<T> comparer)
         {
 			if (array == null) throw new ArgumentNullException("array");
             if (comparer == null) throw new ArgumentNullException("comparer");
 			if (array.<#= length #> < 2) return;
+			Comparison<T> compare = comparer.Compare;
 
 <# if (!native) { #>
-			var simpler = GetInternalMember(array);
-			if (simpler != null) 
-			{ 
-				TimSort(simpler, 0, array.<#= length #>, comparer); 
-				return; 
-			}
-<# } #>
+			if (TryInternalTimSort(array, 0, array.<#= length #>, compare)) return;
 
-            Any<#= name #>TimSort<T>.Sort(array, comparer.Compare);
+<# } #>
+            Any<#= name #>TimSort<T>.Sort(array, compare);
         }
 
         #endregion
@@ -303,6 +332,7 @@ namespace System.Linq
         var array_sorter = native_type + "Array";
         list.Add(new VectorDefinition { 
             Name = array_sorter, ItemType = native_type, CompareMethod = CompareMethod.Native });
+
 		/*
         list.Add(new VectorDefinition { 
             Name = native_type + "List", VectorType = "List<" + native_type + ">", ItemType = native_type, CompareMethod = CompareMethod.Native, ArraySorter = array_sorter });

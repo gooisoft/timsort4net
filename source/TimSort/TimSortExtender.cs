@@ -7,6 +7,9 @@ namespace System.Linq
 {
 	#region class TimSortExtender
 
+    /// <summary>
+    /// <![CDATA[T[], List<T> and IList<T>]]> extender providing TimSort extension methods.
+    /// </summary>
 	public static partial class TimSortExtender
     {
         #region dynamic invocation for IComparable
@@ -26,7 +29,7 @@ namespace System.Linq
             #endregion
         }
 
-        private static Dictionary<Type, SorterReference> _sorters 
+        private static readonly Dictionary<Type, SorterReference> SorterMap 
             = new Dictionary<Type, SorterReference>();
 
         private static SorterReference GetComparableSorter<TContainer, TItem>(Type sorterType)
@@ -35,7 +38,7 @@ namespace System.Linq
             var key = sorterType;
             SorterReference sorter;
 
-            if (!_sorters.TryGetValue(key, out sorter))
+            if (!SorterMap.TryGetValue(key, out sorter))
             {
                 const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
                 sorter = new SorterReference();
@@ -48,7 +51,7 @@ namespace System.Linq
                     staticType.GetMethod("SortRange", flags));
                 sorter.SortAll = (array) => sortAll(array as TContainer);
                 sorter.SortRange = (array, lo, hi) => sortRange(array as TContainer, lo, hi);
-                _sorters[key] = sorter;
+                SorterMap[key] = sorter;
             }
 
             return sorter;
@@ -98,26 +101,30 @@ namespace System.Linq
 
         #endregion
 
-	    private static Dictionary<Type, FieldInfo> _members = 
+	    private static readonly Dictionary<Type, FieldInfo> ItemMemberMap = 
             new Dictionary<Type, FieldInfo>();
 
         private static T[] GetInternalMember<T>(List<T> list)
         {
             FieldInfo member;
             var listType = typeof (List<T>);
-            if (!_members.TryGetValue(listType, out member))
+            if (!ItemMemberMap.TryGetValue(listType, out member))
             {
                 member = typeof (List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance);
-                _members.Add(listType, member);
+                ItemMemberMap.Add(listType, member);
             }
             if (member == null) return null;
             return (T[])member.GetValue(list);
         }
 
+        // ReSharper disable ParameterTypeCanBeEnumerable.Local
+
         private static List<T> GetInternalMember<T>(IList<T> list)
         {
             return list as List<T>;
         }
+
+        // ReSharper restore ParameterTypeCanBeEnumerable.Local
     }
 
 	#endregion

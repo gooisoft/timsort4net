@@ -20,6 +20,26 @@ namespace TimSort.Tests
 			return a.CompareTo(b);
 		}
 
+        [Test]
+        public void RandomTests_Native()
+        {
+            Console.WriteLine("<<< Random data >>>");
+
+            var r = new Random(seed);
+            int[] a = new int[maxSize];
+            int[] b = new int[maxSize];
+
+            Console.WriteLine("Preparing...");
+            for (int i = 0; i < maxSize; i++) a[i] = b[i] = r.Next();
+
+            Console.WriteLine("Sorting...");
+            PerformanceTimer.Debug("builtin", 1, () => Array.Sort(b), maxSize);
+            PerformanceTimer.Debug("timsort", 1, () => a.TimSort(), maxSize);
+
+            Console.WriteLine("Testing...");
+            for (int i = 0; i < maxSize; i++) Assert.AreEqual(a[i], b[i]);
+        }
+
 		[Test]
 		public void RandomTests()
 		{
