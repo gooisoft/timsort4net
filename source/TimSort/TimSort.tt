@@ -80,7 +80,8 @@ using System.Diagnostics;
         "Byte", "SByte", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
         "Single", "Double", "Decimal",
         "Char", 
-        "DateTime", "TimeSpan",
+        "DateTime", "TimeSpan", 
+		"Guid",
     };
 #>
 
@@ -207,7 +208,7 @@ namespace System.Linq
 			if (TryInternalTimSort(array, 0, array.<#= length #>)) return;
 
 <# } #>
-		    if (TryComparableTimeSort(array)) return;
+		    if (TryComparableTimSort(array)) return;
             Any<#= name #>TimSort<T>.Sort(array, Comparer<T>.Default.Compare);
 		}
 
@@ -229,7 +230,7 @@ namespace System.Linq
 			if (TryInternalTimSort(array, start, length)) return;
 
 <# } #>
-            if (TryComparableTimeSort(array, start, start + length)) return;
+            if (TryComparableTimSort(array, start, start + length)) return;
 
             Any<#= name #>TimSort<T>.Sort(array, start, start + length, Comparer<T>.Default.Compare);
         }
@@ -329,9 +330,15 @@ namespace System.Linq
 
     foreach (var native_type in native_types)
     {
+		var compare = CompareMethod.Native;
+		var pointer = true;
+
+		if (native_type == "Guid") compare = CompareMethod.Comparable;
+		if (native_type == "String") pointer = false;
+
         var array_sorter = native_type + "Array";
         list.Add(new VectorDefinition { 
-            Name = array_sorter, ItemType = native_type, CompareMethod = CompareMethod.Native });
+            Name = array_sorter, ItemType = native_type, CompareMethod = compare, Pointer = pointer });
 
 		/*
         list.Add(new VectorDefinition { 
@@ -360,17 +367,16 @@ namespace TimSort
 <#
 	foreach (var item in list) 
 	{ 
+		
 		var usesComparer = (item.CompareMethod == CompareMethod.Comparer);
         var isComparable = (item.CompareMethod == CompareMethod.Comparable);
         var isTemplate = item.IsTemplate;
         var isArray = item.IsArray;
-		var isNative = item.ItemType != null;
+		var canUsePointer = item.Pointer;
 		
 		var itemType = item.ItemType ?? "T";
         var arrayType = item.VectorType ?? itemType + "[]";
 
-		var isArrayOfNative = isArray && isNative;
-		
 		var className = string.Format("{0}TimSort", item.Name);
         var arraySorterName = item.ArraySorter == null ? "" : string.Format("{0}TimSort{1}.", item.ArraySorter, isTemplate ? "<T>" : "");
 		var fullClassName = string.Format("{0}{1}", className, isTemplate ? "<T>" : string.Empty);
@@ -459,7 +465,7 @@ namespace TimSort
 		public static void Sort(<#= arrayArg #>, int lo, int hi<#= comparerArg #>)
 		{
 			CheckRange(array.<#= lengthProperty #>, lo, hi);
-
+			
 			var width = hi - lo;
 			if (width < 2) return; // Arrays of size 0 and 1 are always sorted
 
@@ -518,14 +524,14 @@ namespace TimSort
 <# if (usesComparer) { #>
 		/// <param name="comparer">The comparator to used for the sort.</param>
 <# } #>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
 <# } #>
 		private static void BinarySort(<#= arrayArg #>, int lo, int hi, int start<#= comparerArg #>)
 		{
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * a = &array[0])
 			#else
@@ -610,14 +616,14 @@ namespace TimSort
 		/// <param name="comparer">the comparator to used for the sort.</param>
 <# } #>
 		/// <returns>the length of the run beginning at the specified position in the specified array</returns>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
 <# } #>
 		private static int CountRunAndMakeAscending(<#= arrayArg #>, int lo, int hi<#= comparerArg #>)
 		{
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * a = &array[0])
 			#else
@@ -674,14 +680,14 @@ namespace TimSort
 		/// <param name="dst">The destination array.</param>
 		/// <param name="dstIndex">Starting index in destination array.</param>
 		/// <param name="length">Number of elements to be copied.</param>
-<# if (isNative) { #>
+<# if (canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
 <# } #>
 		private static void IndexedCopyRange(<#= itemType #>[] src, int srcIndex, <#= arrayType #> dst, int dstIndex, int length)
 		{
-<# if (isNative) { #>
+<# if (canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * s = &src[0])
 			#else
@@ -701,14 +707,14 @@ namespace TimSort
 		/// <param name="dst">The destination array.</param>
 		/// <param name="dstIndex">Starting index in destination array.</param>
 		/// <param name="length">Number of elements to be copied.</param>
-<# if (isNative) { #>
+<# if (canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
 <# } #>
 		private static void IndexedCopyRange(<#= arrayType #> src, int srcIndex, <#= itemType #>[] dst, int dstIndex, int length)
 		{
-<# if (isNative) { #>
+<# if (canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * d = &dst[0])
 			#else
@@ -738,7 +744,7 @@ namespace TimSort
 		}
 
 <# } #>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 #if UNSAFE
 
 		/// <summary>Copies range of items.</summary>
@@ -864,14 +870,14 @@ namespace TimSort
 		/// <returns>the int k,  0 &lt;= k &lt;= n such that a[b + k - 1] &lt; key &lt;= a[b + k], pretending that a[b - 1] 
 		/// is minus infinity and a[b + n] is infinity. In other words, key belongs at index b + k; or in other words, the 
 		/// first k elements of a should precede key, and the last n - k should follow it.</returns>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
 <# } #>
 		internal static int GallopLeft(<#= itemType #> key, <#= arrayArg #>, int lo, int length, int hint<#= comparerArg #>)
 		{
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * a = &array[0])
 			#else
@@ -956,14 +962,14 @@ namespace TimSort
 		/// <param name="comparer">the comparator used to order the range, and to search.</param>
 <# } #>
 		/// <returns>int k, that 0 &lt;= k &lt;= n such that a[b + k - 1] &lt;= key &lt; a[b + k]</returns>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
 <# } #>
 		internal static int GallopRight(<#= itemType #> key, <#= arrayArg #>, int lo, int length, int hint<#= comparerArg #>)
 		{
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * a = &array[0])
 			#else
@@ -1047,7 +1053,7 @@ namespace TimSort
 		/// <param name="len1">length of first run to be merged (must be &gt; 0).</param>
 		/// <param name="base2">index of first element in second run to be merged (must be aBase + aLen).</param>
 		/// <param name="len2">length of second run to be merged (must be &gt; 0).</param>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
@@ -1060,7 +1066,7 @@ namespace TimSort
 			var array = _array;
 			var mergeBuffer = EnsureCapacity(len1);
 
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * m = &mergeBuffer[0])
 			fixed (<#= itemType #> * a = &array[0])
@@ -1198,7 +1204,7 @@ namespace TimSort
 		/// <param name="len1">length of first run to be merged (must be &gt; 0).</param>
 		/// <param name="base2">index of first element in second run to be merged (must be aBase + aLen).</param>
 		/// <param name="len2">length of second run to be merged (must be &gt; 0).</param>
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 		#if UNSAFE
 		unsafe
 		#endif
@@ -1211,7 +1217,7 @@ namespace TimSort
 			var array = _array; // For performance
 			var mergeBuffer = EnsureCapacity(len2);
 
-<# if (isArrayOfNative) { #>
+<# if (isArray && canUsePointer) { #>
 			#if UNSAFE
 			fixed (<#= itemType #> * m = &mergeBuffer[0])
 			fixed (<#= itemType #> * a = &array[0])
@@ -1370,5 +1376,6 @@ namespace TimSort
         public string VectorType { get; set; }
         public string ArraySorter { get; set; }
         public CompareMethod CompareMethod { get; set; }
+		public bool Pointer { get; set; }
     }
 #>

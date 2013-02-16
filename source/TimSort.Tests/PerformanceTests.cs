@@ -1,17 +1,16 @@
 ﻿using System;
 using NUnit.Framework;
-using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
 using Performance;
-using TimSort;
 
 namespace TimSort.Tests
 {
 	[TestFixture]
 	public class PerformanceTests
 	{
-		const int maxSize = (int.MaxValue / 100) / sizeof(int);
+	    private const int maxMem = int.MaxValue/64;
+        const int maxSize = maxMem / sizeof(int);
 		const int seed = 1234;
 
 		public static int Compare(int a, int b)
@@ -21,7 +20,7 @@ namespace TimSort.Tests
 		}
 
         [Test]
-        public void RandomTests_Native()
+        public void RandomTests_NativeInt32()
         {
             Console.WriteLine("<<< Random data >>>");
 
@@ -38,6 +37,27 @@ namespace TimSort.Tests
 
             Console.WriteLine("Testing...");
             for (int i = 0; i < maxSize; i++) Assert.AreEqual(a[i], b[i]);
+        }
+
+        [Test]
+        public void RandomTests_NativeGuid()
+        {
+            Console.WriteLine("<<< Random data >>>");
+
+            var length = maxMem/16;
+            var r = new Random(seed);
+            Guid[] a = new Guid[length];
+            Guid[] b = new Guid[length];
+
+            Console.WriteLine("Preparing...");
+            for (int i = 0; i < length; i++) a[i] = b[i] = Guid.NewGuid();
+
+            Console.WriteLine("Sorting...");
+            PerformanceTimer.Debug("builtin", 1, () => Array.Sort(b), maxSize);
+            PerformanceTimer.Debug("timsort", 1, () => a.TimSort(), maxSize);
+
+            Console.WriteLine("Testing...");
+            for (int i = 0; i < length; i++) Assert.AreEqual(a[i], b[i]);
         }
 
 		[Test]
@@ -194,40 +214,5 @@ namespace TimSort.Tests
 			Console.WriteLine("Testing...");
 			for (int i = 0; i < maxSize; i++) Assert.AreEqual(a[i], b[i]);
 		}
-
-        //[Test]
-        //public void RandomTests_ListWithMergeBack()
-        //{
-        //    Console.WriteLine("<<< Random data (buffered vs non-buffered List<T>) >>>");
-
-        //    var r = new Random(seed);
-        //    var a = new List<int>(maxSize);
-        //    var b = new List<int>(maxSize);
-
-        //    Console.WriteLine("Preparing...");
-        //    for (int i = 0; i < maxSize; i++)
-        //    {
-        //        var value = r.Next();
-        //        a.Add(value);
-        //        b.Add(value);
-        //    }
-
-        //    Console.WriteLine("Sorting...");
-        //    PerformanceTimer.Debug("timsort (non-buffered)", 1, () => a.TimSort(Compare, false), maxSize);
-        //    PerformanceTimer.Debug("timsort (buffered)", 1, () => b.TimSort(Compare, true), maxSize);
-
-        //    Console.WriteLine("Testing...");
-        //    for (int i = 0; i < maxSize; i++) Assert.AreEqual(a[i], b[i]);
-        //}
-
-	    [Test]
-	    public void TryNativeTest()
-	    {
-            int[] a = new int[1000];
-            a.TimSort();
-
-            Guid[] g = new Guid[1000];
-            g.TimSort();
-	    }
 	}
 }
