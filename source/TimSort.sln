@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimSort", "TimSort\TimSort.csproj", "{AE2CA992-0C52-4978-9BFE-4E75B95395A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimSort.macOS", "TimSort\TimSort.macOS.csproj", "{AE2CA992-0C52-4978-9BFE-4E75B95395A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimSort.Tests", "TimSort.Tests\TimSort.Tests.csproj", "{90C63D49-49E0-4859-AD43-B76F5300FAC0}"
 EndProject
